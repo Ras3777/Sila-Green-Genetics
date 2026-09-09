@@ -331,7 +331,7 @@ export function useGenericMutation<
     mutationFn,
     ...mutationOptions,
 
-    onMutate: async (variables) => {
+    onMutate: async (variables: TVariables) => {
       const startedAt = Date.now();
 
       await queryClient.cancelQueries({queryKey});
@@ -342,7 +342,7 @@ export function useGenericMutation<
       let optimisticApplied = false;
 
       if (optimisticUpdate) {
-        queryClient.setQueryData<TCache | undefined>(queryKey, (oldData) => {
+        queryClient.setQueryData<TCache | undefined>(queryKey, (oldData: any) => {
           optimisticApplied = true;
 
           return optimisticUpdate(oldData, variables);
@@ -418,13 +418,13 @@ export function useGenericMutation<
       };
     },
 
-    onSuccess: async (data, variables, mutationContext) => {
+    onSuccess: async (data: TData, variables: TVariables, mutationContext: any) => {
       if (mutationContext?.pendingToastId) {
         toast.close(mutationContext.pendingToastId);
       }
 
       if (successUpdate) {
-        queryClient.setQueryData<TCache | undefined>(queryKey, (oldData) =>
+        queryClient.setQueryData<TCache | undefined>(queryKey, (oldData: any) =>
           successUpdate(oldData, data, variables),
         );
       }
@@ -493,7 +493,7 @@ export function useGenericMutation<
       });
     },
 
-    onError: async (error, variables, mutationContext) => {
+    onError: async (error: TError, variables: TVariables, mutationContext: any) => {
       if (mutationContext?.pendingToastId) {
         toast.close(mutationContext.pendingToastId);
       }
@@ -592,7 +592,7 @@ export function useGenericMutation<
       }
     },
 
-    onSettled: async (data, error, variables, mutationContext) => {
+    onSettled: async (data: any, error: any, variables: TVariables, mutationContext: any) => {
       await onSettledExtra?.({
         data,
         error,

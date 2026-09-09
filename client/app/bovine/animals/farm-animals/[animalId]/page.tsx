@@ -23,6 +23,7 @@ import {
 } from 'lucide-react';
 import { useBovine } from '@/lib/bovine-store';
 import AnimalMediaEmbeddedWidget from '@/components/bovine/media/AnimalMediaEmbeddedWidget';
+import { ContextualBovineMap } from '@/components/bovine/map/ContextualBovineMap';
 
 export default function FarmAnimal360Page({
   params,
@@ -289,6 +290,15 @@ export default function FarmAnimal360Page({
           </div>
         </div>
       </div>
+
+      {/* Geospatial Telemetry & Paddock Location */}
+      <ContextualBovineMap
+        title={`${animal.name} (${animal.primaryIdentifier || animal.internalId || animal.id}) Geospatial Telemetry`}
+        description={`Live GNSS fix, assigned paddock, and farm perimeter at ${farm?.name || 'Registered Facility'}`}
+        focusAnimalId={animal.id}
+        focusFarmId={animal.farmId}
+        heightClassName="h-[340px]"
+      />
 
       {/* Visual Evidence & Media Section */}
       <AnimalMediaEmbeddedWidget

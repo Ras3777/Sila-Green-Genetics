@@ -19,6 +19,7 @@ import {
   Clock,
   Printer,
 } from 'lucide-react';
+import { ContextualBovineMap } from '@/components/bovine/map/ContextualBovineMap';
 
 export default function BovineMovementsPage() {
   const { movements, farms, herds, animals, moveAnimals } = useBovine();
@@ -121,6 +122,14 @@ export default function BovineMovementsPage() {
           </button>
         </div>
       </div>
+
+      {/* Geospatial Movement Corridors Map */}
+      <ContextualBovineMap
+        title="Geospatial Transfer Corridors & Carrier Routing"
+        description="Live inter-facility movement corridors, transit manifests, and biosecurity surveillance buffers"
+        presetLayers={{ movements: true, surveillanceBuffers: true }}
+        heightClassName="h-[360px]"
+      />
 
       {/* Filter Bar */}
       <div className="p-4 rounded-2xl bg-white border border-stone-200/80 shadow-2xs flex flex-wrap items-center gap-3 text-xs">

@@ -300,7 +300,7 @@ export default function AnimalStatutoryProfilePage({
           <div className="space-y-3">
             {[
               { date: '2026-03-10', event: 'Current Farm Residency Check', location: `${farm?.name} (${farm?.region})`, status: 'CONFIRMED' },
-              { date: '2025-08-14', event: 'Approved Inter-Farm Transit', location: 'Oromia Seedstock Farm → Bishoftu Nucleus', status: 'PERMIT_PERM-2025-88' },
+              { date: '2025-08-14', event: 'Approved Inter-Farm Transit', location: 'Tigray Seedstock Farm → Mekelle Nucleus', status: 'PERMIT_PERM-2025-88' },
               { date: '2023-04-12', event: 'Birth Registration & Ear Tagging', location: 'Boran Nucleus Breeding Center', status: 'TAGGED_RFID' },
             ].map((m, i) => (
               <div key={i} className="flex items-start space-x-3 p-3 rounded-xl bg-stone-50 border border-stone-200 text-xs">

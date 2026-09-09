@@ -20,6 +20,7 @@ import { useGovernment } from '@/lib/bovine-government-store';
 import { InstitutionalStatCard } from '@/components/bovine/government/cards/InstitutionalStatCard';
 import { GovernmentDataTable } from '@/components/bovine/government/tables/GovernmentDataTable';
 import { DiseaseEvent, QuarantineRecord } from '@/lib/bovine-government-types';
+import { ContextualBovineMap } from '@/components/bovine/map/ContextualBovineMap';
 
 export default function EpidemiologicalBiosurveillancePage() {
   const {
@@ -262,6 +263,16 @@ export default function EpidemiologicalBiosurveillancePage() {
           domain="DIAGNOSTICS"
           target="< 24 hrs"
           status="NORMAL"
+        />
+      </div>
+
+      {/* Geospatial Outbreak GIS & Surveillance Buffer Zones */}
+      <div>
+        <ContextualBovineMap
+          title="Epidemiological Outbreak GIS & Surveillance Buffer Zones"
+          description="Interactive 5km ring-vaccination, 10km transit restriction, and 25km active surveillance perimeters"
+          presetOverlay="HEALTH_STATUS"
+          heightClassName="h-[460px]"
         />
       </div>
 

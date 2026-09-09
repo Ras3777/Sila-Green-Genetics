@@ -13,17 +13,20 @@ import {
   Filter,
   Check,
   Building2,
+  MapPin,
 } from 'lucide-react';
 import { useGovernment } from '@/lib/bovine-government-store';
 import { InstitutionalStatCard } from '@/components/bovine/government/cards/InstitutionalStatCard';
 import { GovernmentNetworkWorkspace } from '@/components/bovine/government/networks/GovernmentNetworkWorkspace';
 import { GovernmentDataTable } from '@/components/bovine/government/tables/GovernmentDataTable';
 import { MovementException } from '@/lib/bovine-government-types';
+import { ContextualBovineMap } from '@/components/bovine/map/ContextualBovineMap';
 
 export default function MovementTraceabilityPage() {
   const { movementExceptions, resolveMovementException } = useGovernment();
 
   const [exceptionFilter, setExceptionFilter] = useState<string>('ALL');
+  const [workspaceView, setWorkspaceView] = useState<'NETWORK' | 'MAP'>('NETWORK');
 
   const filteredExceptions = movementExceptions.filter((m: MovementException) => {
     if (exceptionFilter === 'OPEN' && m.resolved) return false;
@@ -208,17 +211,59 @@ export default function MovementTraceabilityPage() {
         />
       </div>
 
-      {/* Flagship Topological React Flow Movement Network */}
-      <div>
-        <div className="flex items-center justify-between mb-2">
-          <h2 className="text-xs font-bold uppercase tracking-wider text-stone-600">
-            Topological Inter-Farm Movement Traceability Network
-          </h2>
-          <span className="text-[11px] text-stone-600">
-            Active shipments • Red edge denotes transit passing quarantined zone
-          </span>
+      {/* Flagship Topological React Flow Movement Network / Geographic GIS Workspace */}
+      <div className="space-y-2">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+          <div>
+            <h2 className="text-xs font-bold uppercase tracking-wider text-stone-700">
+              Inter-Farm Livestock Traceability & Transit Routing
+            </h2>
+            <p className="text-[11px] text-stone-500">
+              {workspaceView === 'NETWORK'
+                ? 'Topological directed acyclic graph • Red edge denotes transit passing quarantined zone'
+                : 'Geographic GIS coordinates, origin-destination vector corridors, and surveillance buffers'}
+            </p>
+          </div>
+
+          <div className="flex items-center gap-1 bg-stone-100 p-1 rounded-xl border border-stone-200 self-start sm:self-auto">
+            <button
+              type="button"
+              onClick={() => setWorkspaceView('NETWORK')}
+              className={`flex items-center gap-1.5 px-3 py-1 rounded-lg text-xs font-semibold transition-all ${
+                workspaceView === 'NETWORK'
+                  ? 'bg-white text-stone-900 shadow-2xs'
+                  : 'text-stone-600 hover:text-stone-900'
+              }`}
+            >
+              <Layers className="w-3.5 h-3.5" />
+              <span>Topological Graph</span>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => setWorkspaceView('MAP')}
+              className={`flex items-center gap-1.5 px-3 py-1 rounded-lg text-xs font-semibold transition-all ${
+                workspaceView === 'MAP'
+                  ? 'bg-emerald-800 text-white shadow-2xs'
+                  : 'text-stone-600 hover:text-stone-900'
+              }`}
+            >
+              <MapPin className="w-3.5 h-3.5" />
+              <span>Geographic GIS Map</span>
+            </button>
+          </div>
         </div>
-        <GovernmentNetworkWorkspace initialMode="MOVEMENT" height="480px" />
+
+        {workspaceView === 'NETWORK' ? (
+          <GovernmentNetworkWorkspace initialMode="MOVEMENT" height="480px" />
+        ) : (
+          <ContextualBovineMap
+            title="Live Geospatial Livestock Transit Corridors"
+            description="Origin-to-destination flow vectors, hauler truck waypoints, and active surveillance buffers"
+            presetLayers={{ movements: true, surveillanceBuffers: true, diseaseEvents: true }}
+            heightClassName="h-[480px]"
+          />
+        )}
       </div>
 
       {/* Movement Exceptions Queue */}

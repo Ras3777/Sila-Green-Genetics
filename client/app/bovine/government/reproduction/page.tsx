@@ -21,7 +21,7 @@ export default function ReproductiveSurveillancePage() {
   const { openMetricDefinitionDrawer } = useGovernment();
 
   const regionalReproData = [
-    { region: 'Oromia (Dairy Belt & Boran Zone)', eligibleFemales: 42000, aiSubmissionPct: 82.4, conceptionPct: 69.2, dystociaPct: 2.1, calfSurvivalPct: 95.8, status: 'EXCELLENT' },
+    { region: 'Tigray (Dairy Belt & Lowland Zone)', eligibleFemales: 42000, aiSubmissionPct: 82.4, conceptionPct: 69.2, dystociaPct: 2.1, calfSurvivalPct: 95.8, status: 'EXCELLENT' },
     { region: 'Amhara (South Gondar / Fogera)', eligibleFemales: 28500, aiSubmissionPct: 74.8, conceptionPct: 65.4, dystociaPct: 3.2, calfSurvivalPct: 93.4, status: 'NORMAL' },
     { region: 'Sidama (Highland Dairy)', eligibleFemales: 14200, aiSubmissionPct: 88.0, conceptionPct: 71.5, dystociaPct: 1.8, calfSurvivalPct: 96.2, status: 'EXCELLENT' },
     { region: 'Somali (Pastoral Agro-Ecology)', eligibleFemales: 18900, aiSubmissionPct: 42.0, conceptionPct: 58.6, dystociaPct: 4.1, calfSurvivalPct: 89.2, status: 'SPECIAL_ASSISTANCE' },

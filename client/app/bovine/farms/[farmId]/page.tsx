@@ -20,6 +20,7 @@ import {
   Droplets,
   Activity,
 } from 'lucide-react';
+import { ContextualBovineMap } from '@/components/bovine/map/ContextualBovineMap';
 
 export default function BovineFarmOverviewPage({
   params,
@@ -55,6 +56,14 @@ export default function BovineFarmOverviewPage({
 
   return (
     <div className="space-y-6">
+      {/* Geospatial Farm Perimeter & Paddock Subdivisions Map */}
+      <ContextualBovineMap
+        title={`${farm.name} Spatial Boundaries & Paddock Subdivisions`}
+        description={`Government-verified perimeter (${farm.region}, ${farm.city || 'District'}), internal grazing paddocks, and biosecurity zone`}
+        focusFarmId={farm.id}
+        heightClassName="h-[360px]"
+      />
+
       {/* 2-Column Grid */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Left Column (2 Cols) */}

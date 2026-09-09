@@ -32,6 +32,7 @@ import {
 import { useMarketplace } from '@/lib/bovine-marketplace-store';
 import { useBovine } from '@/lib/bovine-store';
 import { MarketplaceAssetType } from '@/lib/bovine-marketplace-types';
+import { ContextualBovineMap } from '@/components/bovine/map/ContextualBovineMap';
 
 export default function MarketplaceHomePage() {
   const router = useRouter();
@@ -246,6 +247,14 @@ export default function MarketplaceHomePage() {
           <ChevronRight className="w-3.5 h-3.5 text-stone-400" />
         </Link>
       </div>
+
+      {/* Geospatial Genetics Sourcing & Seedstock Map */}
+      <ContextualBovineMap
+        title="Geospatial Genetics Sourcing & Seedstock Exchange"
+        description="Explore certified breeding bulls, semen distribution hubs, and embryo lots by regional origin"
+        presetLayers={{ marketplaceListings: true }}
+        heightClassName="h-[360px]"
+      />
 
       {/* Category Pills Selector */}
       <div className="flex items-center gap-2 overflow-x-auto pb-1">

@@ -154,7 +154,7 @@ function PublicVerifyPageContent() {
                 onClick={() => handleSelectSample('CERT-2026-0014209')}
                 className="px-2 py-0.5 rounded-md bg-rose-100/80 text-rose-900 text-[10px] font-mono font-bold cursor-pointer hover:bg-rose-200"
               >
-                Oromia Chief (Revoked)
+                Highland Chief (Revoked)
               </button>
               <button
                 onClick={() => handleSelectSample('CERT-2025-0018491')}

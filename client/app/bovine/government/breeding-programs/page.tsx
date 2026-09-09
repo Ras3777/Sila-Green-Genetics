@@ -57,7 +57,7 @@ export default function BreedingProgramsOversightPage() {
     {
       code: 'BP-ARSI-PASTORAL',
       name: 'Arsi Zebu Heat & Tsetse Tolerance Resilience Program',
-      agency: 'Regional Agriculture Bureau & Oromia Livestock Agency',
+      agency: 'Regional Agriculture Bureau & Tigray Livestock Agency',
       targetGain: 'Tick Resistance Index > 115',
       achievedGain: 'Index = 112',
       activeSires: 32,

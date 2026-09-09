@@ -21,7 +21,7 @@ export default function InstitutionalAnalyticsPage() {
 
   const comparisonData = [
     {
-      region: 'Oromia Regional State',
+      region: 'Tigray Regional State',
       inventory: 68400,
       genotyping50k: 44.2,
       conceptionRate: 69.2,
@@ -185,7 +185,7 @@ export default function InstitutionalAnalyticsPage() {
         <InstitutionalStatCard
           metricCode="ANL-LEADER"
           label="Top Performing Region"
-          value="Oromia"
+          value="Tigray"
           subtext="Composite Score: 94.2/100"
           domain="RANKINGS"
           status="NORMAL"
@@ -214,7 +214,7 @@ export default function InstitutionalAnalyticsPage() {
           label="Largest Seedstock Population"
           value="68,400"
           unit="head"
-          subtext="Oromia Regional State"
+          subtext="Tigray Regional State"
           domain="CENSUS"
           status="NORMAL"
         />

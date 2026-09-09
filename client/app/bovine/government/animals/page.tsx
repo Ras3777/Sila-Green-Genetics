@@ -53,7 +53,7 @@ export default function NationalAnimalRegistryPage() {
       breed: breedName,
       farmName: farm?.name || 'Nucleus Farm',
       farmCode: farm?.code || 'FARM-ET-001',
-      region: farm?.region || 'Oromia',
+      region: farm?.region || 'Tigray',
       rfid: rfidId?.value || `982-0000-${a.internalId.replace('ANIM-', '')}`,
       integrityStatus,
       isGenotyped,

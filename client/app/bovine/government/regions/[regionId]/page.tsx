@@ -31,7 +31,7 @@ export default function RegionalDossierPage({
 
   const region = jurisdictions.find(
     (j) => j.id === resolvedParams.regionId || j.code.toLowerCase() === resolvedParams.regionId.toLowerCase()
-  ) || jurisdictions[1]; // fallback to Oromia
+  ) || jurisdictions[1]; // fallback to primary region
 
   const regionFarms = farms.filter((f) => f.region?.toLowerCase().includes(region.name.toLowerCase()));
   const regionDiseaseEvents = diseaseEvents.filter(

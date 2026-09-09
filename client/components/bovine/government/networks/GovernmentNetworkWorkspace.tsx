@@ -262,7 +262,7 @@ export function GovernmentNetworkWorkspace({
         diseaseName: 'Foot and Mouth Disease (Serotype O)',
         confirmedStatus: 'CONFIRMED',
         farmName: 'Bishoftu Apex Nucleus Farm',
-        regionName: 'Oromia',
+        regionName: 'Tigray',
         animalsAffected: 24,
       };
 

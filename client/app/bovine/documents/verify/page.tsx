@@ -54,8 +54,8 @@ export default function DocumentVerificationPage() {
     let fileContent = 'Authoritative Certificate Content - Golden Star 1248';
 
     if (sampleType === 'REVOKED') {
-      filename = 'Oromia-Chief-88-Parentage-Revoked.pdf';
-      fileContent = 'Revoked Certificate Content - Oromia Chief 88';
+      filename = 'Highland-Chief-88-Parentage-Revoked.pdf';
+      fileContent = 'Revoked Certificate Content - Highland Chief 88';
     } else if (sampleType === 'TAMPERED') {
       filename = 'Golden-Star-1248-Altered-Hash.pdf';
       fileContent = 'Altered PDF Bytes With Modified Sire Information';
