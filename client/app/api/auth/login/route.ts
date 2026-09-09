@@ -37,7 +37,8 @@ export async function POST(request: Request) {
       maxAge: SESSION_TTL_SECONDS,
     });
     return response;
-  } catch {
+  } catch (error) {
+    console.error('[demo-auth] sign-in failed', error);
     return NextResponse.json({ error: 'Demo sign-in is temporarily unavailable.' }, { status: 503 });
   }
 }
