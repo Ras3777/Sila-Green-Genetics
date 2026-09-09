@@ -23,7 +23,7 @@ export async function POST(request: Request) {
     const deviceId = existingDeviceId || randomBytes(32).toString('base64url');
     const deviceHash = createHash('sha256').update(deviceId).digest('base64url');
     if (user.device_id_hash && user.device_id_hash !== deviceHash) {
-      return NextResponse.json({ error: 'This account is locked to its original browser.' }, { status: 403 });
+      return NextResponse.json({ error: 'Unable to sign in with these credentials.' }, { status: 401 });
     }
 
     const session = createSession(email);
@@ -39,7 +39,7 @@ export async function POST(request: Request) {
       RETURNING email
     `;
     if (claimed.length === 0) {
-      return NextResponse.json({ error: 'This demo is already open in another browser. Sign out there before starting a new session.' }, { status: 409 });
+      return NextResponse.json({ error: 'Unable to sign in with these credentials.' }, { status: 401 });
     }
     const forwardedFor = request.headers.get('x-forwarded-for');
     const ip = forwardedFor?.split(',')[0]?.trim() || request.headers.get('x-real-ip') || null;
