@@ -505,7 +505,7 @@ function BovineShellInner({ children }: { children: React.ReactNode }) {
                   >
                     <div className="flex items-center gap-1.5">
                       <UserCheck className="w-3.5 h-3.5 text-emerald-700" />
-                      <span>Farmer Portal (Sign In)</span>
+                      <span>Sign out of demo</span>
                     </div>
                     <span className="text-[10px] text-emerald-700 font-mono bg-emerald-100/60 px-1.5 py-0.5 rounded">/login</span>
                   </Link>
