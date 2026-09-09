@@ -11,10 +11,20 @@ export default function DemoAuthGate({ children }: { children: React.ReactNode }
 
   useEffect(() => {
     let active = true;
-    fetch('/api/auth/session', { credentials: 'include', cache: 'no-store' })
-      .then((response) => response.ok)
-      .catch(() => false)
-      .then((authorized) => {
+    const checkSession = async () => {
+      for (let attempt = 0; attempt < 3; attempt += 1) {
+        try {
+          const response = await fetch('/api/auth/session', { credentials: 'include', cache: 'no-store' });
+          if (response.ok) return true;
+        } catch {
+          // Retry transient cold-start or database wake-up failures.
+        }
+        if (attempt < 2) await new Promise((resolve) => setTimeout(resolve, 500));
+      }
+      return false;
+    };
+
+    checkSession().then((authorized) => {
         if (!active) return;
         setIsAuthorized(authorized);
         setIsChecking(false);
