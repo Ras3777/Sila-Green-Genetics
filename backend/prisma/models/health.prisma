@@ -1,0 +1,247 @@
+// HEALTH DOMAIN
+
+model VaccineCatalog {
+  id           String   @id @default(uuid())
+  code         String   @unique
+  name         String
+  manufacturer String?
+  diseaseTarget String?
+  active       Boolean  @default(true)
+
+  events VaccinationEvent[]
+  @@schema("bovine_health")
+}
+
+model VaccinationEvent {
+  id                 String              @id @default(uuid())
+  animalId           String
+  vaccineId          String
+  administeredAt     DateTime
+  dose               Decimal?            @db.Decimal(10, 3)
+  doseUnit           String?
+  route              AdministrationRoute?
+  batchNumber        String?
+  expiryDate         DateTime?
+  administeredById   String?
+  nextDueAt          DateTime?
+  notes              String?
+  createdAt          DateTime            @default(now())
+
+  animal         Animal         @relation(fields: [animalId], references: [id], onDelete: Cascade)
+  vaccine        VaccineCatalog @relation(fields: [vaccineId], references: [id])
+  administeredBy User?          @relation("VaccineAdministrator", fields: [administeredById], references: [id], onDelete: SetNull)
+
+  @@index([animalId, administeredAt])
+  @@index([nextDueAt])
+  @@schema("bovine_health")
+}
+
+model HealthEvent {
+  id          String            @id @default(uuid())
+  animalId    String
+  farmId      String?
+  openedAt    DateTime
+  closedAt    DateTime?
+  status      HealthEventStatus @default(OPEN)
+  reason      String?
+  severity    String?
+  notes       String?
+  createdAt   DateTime          @default(now())
+  updatedAt   DateTime          @updatedAt
+
+  animal     Animal      @relation(fields: [animalId], references: [id], onDelete: Cascade)
+  farm       Farm?       @relation(fields: [farmId], references: [id], onDelete: SetNull)
+  diagnoses  Diagnosis[]
+  treatments Treatment[]
+
+  diseaseIncidentLinks DiseaseIncidentAnimal[]
+  @@index([animalId, openedAt])
+  @@index([status])
+  @@schema("bovine_health")
+}
+
+model Diagnosis {
+  id            String   @id @default(uuid())
+  healthEventId String?
+  animalId      String
+  diagnosisCode String?
+  diagnosisName String
+  diagnosedAt   DateTime
+  recordedById  String?
+  labConfirmed  Boolean  @default(false)
+  notes         String?
+  createdAt     DateTime @default(now())
+
+  healthEvent HealthEvent? @relation(fields: [healthEventId], references: [id], onDelete: SetNull)
+  animal      Animal       @relation(fields: [animalId], references: [id], onDelete: Cascade)
+  recordedBy  User?        @relation("DiagnosisRecorder", fields: [recordedById], references: [id], onDelete: SetNull)
+
+  @@index([animalId, diagnosedAt])
+  @@schema("bovine_health")
+}
+
+model Treatment {
+  id            String   @id @default(uuid())
+  healthEventId String?
+  animalId      String
+  treatmentName String
+  medication    String?
+  dose          Decimal? @db.Decimal(10, 3)
+  doseUnit      String?
+  route         AdministrationRoute?
+  startedAt     DateTime
+  endedAt       DateTime?
+  withdrawalEnd DateTime?
+  recordedById  String?
+  notes         String?
+  createdAt     DateTime @default(now())
+
+  healthEvent HealthEvent? @relation(fields: [healthEventId], references: [id], onDelete: SetNull)
+  animal      Animal       @relation(fields: [animalId], references: [id], onDelete: Cascade)
+  recordedBy       User?                      @relation("TreatmentRecorder", fields: [recordedById], references: [id], onDelete: SetNull)
+  administrations MedicationAdministration[]
+
+  @@index([animalId, startedAt])
+  @@index([withdrawalEnd])
+  @@schema("bovine_health")
+}
+
+model MedicationAdministration {
+  id             String                         @id @default(uuid())
+  animalId       String
+  treatmentId    String?
+  administeredAt DateTime
+  medication     String
+  dose           Decimal?                       @db.Decimal(10, 3)
+  doseUnit       String?
+  route          AdministrationRoute?
+  batchNumber    String?
+  status         MedicationAdministrationStatus @default(GIVEN)
+  administeredById String?
+  notes          String?
+  createdAt      DateTime                       @default(now())
+
+  animal         Animal     @relation(fields: [animalId], references: [id], onDelete: Cascade)
+  treatment      Treatment? @relation(fields: [treatmentId], references: [id], onDelete: SetNull)
+  administeredBy User?      @relation("MedicationAdministrator", fields: [administeredById], references: [id], onDelete: SetNull)
+
+  @@index([animalId, administeredAt])
+  @@index([treatmentId, administeredAt])
+  @@index([status, administeredAt])
+  @@schema("bovine_health")
+}
+
+model PreventiveCareEvent {
+  id            String             @id @default(uuid())
+  animalId      String
+  farmId        String?
+  type          PreventiveCareType
+  performedAt   DateTime
+  product       String?
+  batchNumber   String?
+  dose          Decimal?           @db.Decimal(10, 3)
+  doseUnit      String?
+  route         AdministrationRoute?
+  performedById String?
+  nextDueAt     DateTime?
+  notes         String?
+  createdAt     DateTime           @default(now())
+
+  animal      Animal @relation(fields: [animalId], references: [id], onDelete: Cascade)
+  farm        Farm?  @relation(fields: [farmId], references: [id], onDelete: SetNull)
+  performedBy User?  @relation("PreventiveCarePerformer", fields: [performedById], references: [id], onDelete: SetNull)
+
+  @@index([animalId, performedAt])
+  @@index([farmId, performedAt])
+  @@index([nextDueAt])
+  @@schema("bovine_health")
+}
+
+model DiseaseIncident {
+  id                   String                    @id @default(uuid())
+  farmId               String?
+  title                String
+  diseaseName          String?
+  confirmationStatus   DiseaseConfirmationStatus @default(SUSPECTED)
+  status               DiseaseIncidentStatus     @default(OPEN)
+  onsetAt              DateTime?
+  reportedAt           DateTime                  @default(now())
+  confirmedAt          DateTime?
+  containedAt          DateTime?
+  closedAt             DateTime?
+  animalsAffectedCount Int?
+  deathsCount          Int?
+  caseFatalityRate     Decimal?                  @db.Decimal(7, 4)
+  source               String?
+  notes                String?
+  metadata             Json?
+  createdAt            DateTime                  @default(now())
+  updatedAt            DateTime                  @updatedAt
+
+  farm            Farm? @relation(fields: [farmId], references: [id], onDelete: SetNull)
+  animals         DiseaseIncidentAnimal[]
+  quarantineOrders QuarantineOrder[]
+
+  @@index([farmId, reportedAt])
+  @@index([status, reportedAt])
+  @@index([confirmationStatus, reportedAt])
+  @@schema("bovine_health")
+}
+
+model DiseaseIncidentAnimal {
+  id             String   @id @default(uuid())
+  incidentId     String
+  animalId       String
+  healthEventId  String?
+  affectedAt     DateTime?
+  recoveredAt    DateTime?
+  diedAt         DateTime?
+  notes          String?
+
+  incident   DiseaseIncident @relation(fields: [incidentId], references: [id], onDelete: Cascade)
+  animal     Animal          @relation(fields: [animalId], references: [id], onDelete: Cascade)
+  healthEvent HealthEvent?   @relation(fields: [healthEventId], references: [id], onDelete: SetNull)
+
+  @@unique([incidentId, animalId])
+  @@index([animalId])
+  @@schema("bovine_health")
+}
+
+model QuarantineOrder {
+  id             String           @id @default(uuid())
+  farmId         String?
+  diseaseIncidentId String?
+  issuedByUserId String?
+  status         QuarantineStatus @default(PLANNED)
+  reason         String
+  startsAt       DateTime
+  expectedEndAt  DateTime?
+  releasedAt     DateTime?
+  blocksMovement Boolean          @default(true)
+  notes          String?
+  createdAt      DateTime         @default(now())
+  updatedAt      DateTime         @updatedAt
+
+  farm       Farm? @relation(fields: [farmId], references: [id], onDelete: SetNull)
+  incident   DiseaseIncident? @relation(fields: [diseaseIncidentId], references: [id], onDelete: SetNull)
+  issuedBy   User? @relation(fields: [issuedByUserId], references: [id], onDelete: SetNull)
+  animals    QuarantineAnimal[]
+
+  @@index([farmId, status, startsAt])
+  @@index([diseaseIncidentId])
+  @@schema("bovine_health")
+}
+
+model QuarantineAnimal {
+  quarantineOrderId String
+  animalId          String
+  addedAt           DateTime @default(now())
+  releasedAt        DateTime?
+
+  quarantineOrder QuarantineOrder @relation(fields: [quarantineOrderId], references: [id], onDelete: Cascade)
+  animal          Animal          @relation(fields: [animalId], references: [id], onDelete: Cascade)
+
+  @@id([quarantineOrderId, animalId])
+  @@index([animalId])
+  @@schema("bovine_health")
+}

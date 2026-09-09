@@ -8,6 +8,8 @@ import { BovineGeneticsProvider } from '@/lib/bovine-genetics-store';
 import { BovineBreedingProvider } from '@/lib/bovine-breeding-store';
 import { BovineMarketplaceProvider } from '@/lib/bovine-marketplace-store';
 import { BovineTrustProvider } from '@/lib/bovine-trust-store';
+import DemoAuthGate from '@/components/auth/DemoAuthGate';
+import { clearDemoSession } from '@/lib/demo-auth';
 import {
   LayoutDashboard,
   Layers,
@@ -494,7 +496,11 @@ function BovineShellInner({ children }: { children: React.ReactNode }) {
                 <div className="pt-2 mt-2 border-t border-stone-100 flex flex-col gap-1">
                   <Link
                     href="/login"
-                    onClick={() => setRoleMenuOpen(false)}
+                    onClick={() => {
+                      void fetch('/api/auth/logout', { method: 'POST', credentials: 'include' });
+                      clearDemoSession();
+                      setRoleMenuOpen(false);
+                    }}
                     className="flex items-center justify-between p-2 rounded-lg hover:bg-emerald-50 text-stone-700 hover:text-emerald-800 font-medium text-xs transition-colors"
                   >
                     <div className="flex items-center gap-1.5">
@@ -777,16 +783,18 @@ function BovineShellInner({ children }: { children: React.ReactNode }) {
 
 export default function BovineLayout({ children }: { children: React.ReactNode }) {
   return (
-    <BovineProvider>
-      <BovineGeneticsProvider>
-        <BovineBreedingProvider>
-          <BovineMarketplaceProvider>
-            <BovineTrustProvider>
-              <BovineShellInner>{children}</BovineShellInner>
-            </BovineTrustProvider>
-          </BovineMarketplaceProvider>
-        </BovineBreedingProvider>
-      </BovineGeneticsProvider>
-    </BovineProvider>
+    <DemoAuthGate>
+      <BovineProvider>
+        <BovineGeneticsProvider>
+          <BovineBreedingProvider>
+            <BovineMarketplaceProvider>
+              <BovineTrustProvider>
+                <BovineShellInner>{children}</BovineShellInner>
+              </BovineTrustProvider>
+            </BovineMarketplaceProvider>
+          </BovineBreedingProvider>
+        </BovineGeneticsProvider>
+      </BovineProvider>
+    </DemoAuthGate>
   );
 }

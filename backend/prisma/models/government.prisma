@@ -1,0 +1,525 @@
+// GOVERNMENT DOMAIN
+
+model GovernmentJurisdiction {
+  id          String           @id @default(uuid())
+  code        String           @unique
+  name        String
+  type        JurisdictionType
+  parentId    String?
+  countryCode String?
+  metadata    Json?
+  active      Boolean          @default(true)
+  createdAt   DateTime         @default(now())
+  updatedAt   DateTime         @updatedAt
+
+  parent      GovernmentJurisdiction? @relation("JurisdictionHierarchy", fields: [parentId], references: [id], onDelete: SetNull)
+  children    GovernmentJurisdiction[] @relation("JurisdictionHierarchy")
+  offices     GovernmentOffice[]
+  assignments GovernmentOfficialAssignment[]
+  audits      ComplianceAudit[]
+  inspections GovernmentInspection[]
+  investigations GovernmentInvestigation[]
+  programs    GovernmentProgram[]
+  alerts      GovernmentAlert[]
+  metricSnapshots GovernmentMetricSnapshot[]
+  reportTemplates GovernmentReportTemplate[]
+  scheduledReports ScheduledReport[]
+
+  farms Farm[]
+  programProgress GovernmentProgramProgress[]
+  @@index([parentId, type])
+  @@schema("bovine_government")
+}
+
+model GovernmentOffice {
+  id             String               @id @default(uuid())
+  code           String               @unique
+  name           String
+  type           GovernmentOfficeType
+  jurisdictionId String
+  organizationId String?
+  parentOfficeId String?
+  active         Boolean              @default(true)
+  contact        Json?
+  createdAt      DateTime             @default(now())
+  updatedAt      DateTime             @updatedAt
+
+  jurisdiction GovernmentJurisdiction @relation(fields: [jurisdictionId], references: [id], onDelete: Cascade)
+  organization Organization? @relation(fields: [organizationId], references: [id], onDelete: SetNull)
+  parentOffice GovernmentOffice? @relation("GovernmentOfficeHierarchy", fields: [parentOfficeId], references: [id], onDelete: SetNull)
+  childOffices GovernmentOffice[] @relation("GovernmentOfficeHierarchy")
+  assignments GovernmentOfficialAssignment[]
+  ledPrograms GovernmentProgram[]
+
+  @@index([jurisdictionId, active])
+  @@index([parentOfficeId])
+  @@schema("bovine_government")
+}
+
+model GovernmentOfficialAssignment {
+  id                String   @id @default(uuid())
+  userId            String
+  officeId          String?
+  jurisdictionId    String
+  breedingProgramId String?
+  roleCode          String
+  effectiveFrom     DateTime @default(now())
+  effectiveTo       DateTime?
+  metadata          Json?
+  createdAt         DateTime @default(now())
+
+  user          User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  office        GovernmentOffice? @relation(fields: [officeId], references: [id], onDelete: SetNull)
+  jurisdiction  GovernmentJurisdiction @relation(fields: [jurisdictionId], references: [id], onDelete: Cascade)
+  breedingProgram BreedingProgram? @relation(fields: [breedingProgramId], references: [id], onDelete: SetNull)
+
+  @@index([userId, effectiveTo])
+  @@index([jurisdictionId, effectiveTo])
+  @@schema("bovine_government")
+}
+
+model ComplianceRequirement {
+  id             String   @id @default(uuid())
+  code           String   @unique
+  category       String
+  name           String
+  description    String?
+  policyReference String?
+  active         Boolean  @default(true)
+  checklistConfig Json?
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  auditItems ComplianceAuditItem[]
+  findings   ComplianceFinding[]
+  @@schema("bovine_government")
+}
+
+model ComplianceAudit {
+  id             String                @id @default(uuid())
+  publicId       String                @unique @default(uuid())
+  farmId         String
+  jurisdictionId String
+  auditorUserId  String?
+  type           String
+  status         ComplianceAuditStatus @default(PLANNED)
+  scope          Json?
+  startedAt      DateTime?
+  completedAt    DateTime?
+  summary        String?
+  createdAt      DateTime              @default(now())
+  updatedAt      DateTime              @updatedAt
+
+  farm         Farm @relation(fields: [farmId], references: [id], onDelete: Cascade)
+  jurisdiction GovernmentJurisdiction @relation(fields: [jurisdictionId], references: [id], onDelete: Restrict)
+  auditor      User? @relation(fields: [auditorUserId], references: [id], onDelete: SetNull)
+  items        ComplianceAuditItem[]
+  findings     ComplianceFinding[]
+  inspections  GovernmentInspection[]
+
+  @@index([farmId, status, createdAt])
+  @@index([jurisdictionId, status, createdAt])
+  @@schema("bovine_government")
+}
+
+model ComplianceAuditItem {
+  id            String               @id @default(uuid())
+  auditId       String
+  requirementId String
+  status        ComplianceItemStatus @default(NOT_ASSESSED)
+  severity      FindingSeverity?
+  evidenceNotes String?
+  linkedEntityType String?
+  linkedEntityId   String?
+  metadata      Json?
+  updatedAt     DateTime             @updatedAt
+
+  audit       ComplianceAudit @relation(fields: [auditId], references: [id], onDelete: Cascade)
+  requirement ComplianceRequirement @relation(fields: [requirementId], references: [id], onDelete: Restrict)
+
+  @@unique([auditId, requirementId])
+  @@index([status, severity])
+  @@schema("bovine_government")
+}
+
+model ComplianceFinding {
+  id             String          @id @default(uuid())
+  publicId       String          @unique @default(uuid())
+  auditId        String?
+  farmId         String
+  requirementId String?
+  severity       FindingSeverity
+  status         FindingStatus   @default(OPEN)
+  title          String
+  description    String
+  policyReference String?
+  evidence       Json?
+  openedAt       DateTime        @default(now())
+  dueAt          DateTime?
+  resolvedAt     DateTime?
+  resolution     String?
+  createdAt      DateTime        @default(now())
+  updatedAt      DateTime        @updatedAt
+
+  audit       ComplianceAudit? @relation(fields: [auditId], references: [id], onDelete: SetNull)
+  farm        Farm @relation(fields: [farmId], references: [id], onDelete: Cascade)
+  requirement ComplianceRequirement? @relation(fields: [requirementId], references: [id], onDelete: SetNull)
+  correctiveActions CorrectiveAction[]
+
+  @@index([farmId, status, severity])
+  @@index([auditId])
+  @@schema("bovine_government")
+}
+
+model CorrectiveAction {
+  id                       String                 @id @default(uuid())
+  findingId                String
+  responsibleOrganizationId String?
+  status                   CorrectiveActionStatus @default(OPEN)
+  requiredAction           String
+  issuedAt                 DateTime               @default(now())
+  dueAt                    DateTime?
+  response                 String?
+  evidence                 Json?
+  reviewedAt               DateTime?
+  resolvedAt               DateTime?
+  createdAt                DateTime               @default(now())
+  updatedAt                DateTime               @updatedAt
+
+  finding ComplianceFinding @relation(fields: [findingId], references: [id], onDelete: Cascade)
+  responsibleOrganization Organization? @relation(fields: [responsibleOrganizationId], references: [id], onDelete: SetNull)
+
+  @@index([status, dueAt])
+  @@index([responsibleOrganizationId, status])
+  @@schema("bovine_government")
+}
+
+model GovernmentInspection {
+  id               String                     @id @default(uuid())
+  publicId         String                     @unique @default(uuid())
+  farmId           String
+  jurisdictionId   String
+  auditId          String?
+  leadInspectorId  String?
+  type             String
+  status           GovernmentInspectionStatus @default(PLANNED)
+  reason           String?
+  scheduledAt      DateTime?
+  startedAt        DateTime?
+  completedAt      DateTime?
+  checklist        Json?
+  summary          String?
+  followUpDueAt    DateTime?
+  createdAt        DateTime                   @default(now())
+  updatedAt        DateTime                   @updatedAt
+
+  farm          Farm @relation(fields: [farmId], references: [id], onDelete: Cascade)
+  jurisdiction  GovernmentJurisdiction @relation(fields: [jurisdictionId], references: [id], onDelete: Restrict)
+  audit         ComplianceAudit? @relation(fields: [auditId], references: [id], onDelete: SetNull)
+  leadInspector User? @relation(fields: [leadInspectorId], references: [id], onDelete: SetNull)
+
+  @@index([jurisdictionId, status, scheduledAt])
+  @@index([farmId, status])
+  @@schema("bovine_government")
+}
+
+model GovernmentInvestigation {
+  id             String                          @id @default(uuid())
+  publicId       String                          @unique @default(uuid())
+  jurisdictionId String
+  openedByUserId String?
+  type           GovernmentInvestigationType
+  priority       GovernmentInvestigationPriority @default(MEDIUM)
+  status         GovernmentInvestigationStatus   @default(OPEN)
+  title          String
+  reason         String
+  dueAt          DateTime?
+  outcome        String?
+  openedAt       DateTime                        @default(now())
+  closedAt       DateTime?
+  createdAt      DateTime                        @default(now())
+  updatedAt      DateTime                        @updatedAt
+
+  jurisdiction GovernmentJurisdiction @relation(fields: [jurisdictionId], references: [id], onDelete: Restrict)
+  openedBy     User? @relation(fields: [openedByUserId], references: [id], onDelete: SetNull)
+  entities     InvestigationEntityLink[]
+  evidence     InvestigationEvidenceLink[]
+  findings     InvestigationFinding[]
+  actions      InvestigationAction[]
+
+  @@index([jurisdictionId, status, priority])
+  @@schema("bovine_government")
+}
+
+model InvestigationEntityLink {
+  id              String   @id @default(uuid())
+  investigationId String
+  entityType      String
+  entityId        String
+  relationship    String?
+  metadata        Json?
+  createdAt       DateTime @default(now())
+
+  investigation GovernmentInvestigation @relation(fields: [investigationId], references: [id], onDelete: Cascade)
+
+  @@unique([investigationId, entityType, entityId, relationship])
+  @@index([entityType, entityId])
+  @@schema("bovine_government")
+}
+
+model InvestigationEvidenceLink {
+  id              String         @id @default(uuid())
+  investigationId String
+  fileId          String?
+  entityType      String?
+  entityId        String?
+  status          EvidenceStatus @default(UNVERIFIED)
+  title           String
+  note            String?
+  pinned          Boolean        @default(false)
+  metadata        Json?
+  createdAt       DateTime       @default(now())
+
+  investigation GovernmentInvestigation @relation(fields: [investigationId], references: [id], onDelete: Cascade)
+  file          FileAsset? @relation(fields: [fileId], references: [id], onDelete: SetNull)
+
+  @@index([investigationId, status, createdAt])
+  @@schema("bovine_government")
+}
+
+model InvestigationFinding {
+  id              String          @id @default(uuid())
+  investigationId String
+  createdByUserId String?
+  severity        FindingSeverity
+  title           String
+  description     String
+  confidence      Decimal?        @db.Decimal(5, 4)
+  evidenceSummary Json?
+  createdAt       DateTime        @default(now())
+  updatedAt       DateTime        @updatedAt
+
+  investigation GovernmentInvestigation @relation(fields: [investigationId], references: [id], onDelete: Cascade)
+  createdBy     User? @relation(fields: [createdByUserId], references: [id], onDelete: SetNull)
+
+  @@index([investigationId, severity])
+  @@schema("bovine_government")
+}
+
+model InvestigationAction {
+  id               String   @id @default(uuid())
+  investigationId  String
+  assignedToUserId String?
+  type             String
+  title            String
+  description      String?
+  status           TaskStatus @default(OPEN)
+  dueAt            DateTime?
+  completedAt      DateTime?
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  investigation GovernmentInvestigation @relation(fields: [investigationId], references: [id], onDelete: Cascade)
+  assignedTo    User? @relation(fields: [assignedToUserId], references: [id], onDelete: SetNull)
+
+  @@index([assignedToUserId, status, dueAt])
+  @@schema("bovine_government")
+}
+
+model GovernmentProgram {
+  id             String                  @id @default(uuid())
+  code           String                  @unique
+  name           String
+  type           GovernmentProgramType
+  status         GovernmentProgramStatus @default(PLANNING)
+  jurisdictionId String
+  leadOfficeId   String?
+  description    String?
+  targetPopulation Json?
+  startsAt       DateTime?
+  endsAt         DateTime?
+  createdAt      DateTime                @default(now())
+  updatedAt      DateTime                @updatedAt
+
+  jurisdiction GovernmentJurisdiction @relation(fields: [jurisdictionId], references: [id], onDelete: Restrict)
+  leadOffice    GovernmentOffice? @relation(fields: [leadOfficeId], references: [id], onDelete: SetNull)
+  targets       GovernmentProgramTarget[]
+  progress      GovernmentProgramProgress[]
+  breedingPrograms GovernmentProgramBreedingProgram[]
+
+  @@index([jurisdictionId, status])
+  @@schema("bovine_government")
+}
+
+model GovernmentProgramBreedingProgram {
+  governmentProgramId String
+  breedingProgramId   String
+  createdAt           DateTime @default(now())
+
+  governmentProgram GovernmentProgram @relation(fields: [governmentProgramId], references: [id], onDelete: Cascade)
+  breedingProgram   BreedingProgram   @relation(fields: [breedingProgramId], references: [id], onDelete: Cascade)
+
+  @@id([governmentProgramId, breedingProgramId])
+  @@schema("bovine_government")
+}
+
+model GovernmentProgramTarget {
+  id          String   @id @default(uuid())
+  programId   String
+  metricKey   String
+  unit        String?
+  baseline    Decimal? @db.Decimal(18, 6)
+  target      Decimal? @db.Decimal(18, 6)
+  current     Decimal? @db.Decimal(18, 6)
+  targetDate  DateTime?
+  metadata    Json?
+  updatedAt   DateTime @updatedAt
+
+  program GovernmentProgram @relation(fields: [programId], references: [id], onDelete: Cascade)
+
+  @@unique([programId, metricKey])
+  @@schema("bovine_government")
+}
+
+model GovernmentProgramProgress {
+  id             String   @id @default(uuid())
+  programId      String
+  jurisdictionId String?
+  snapshotDate   DateTime @db.Date
+  targetCount    Int?
+  completedCount Int?
+  coveragePercent Decimal? @db.Decimal(7, 4)
+  metrics        Json?
+  createdAt      DateTime @default(now())
+
+  program GovernmentProgram @relation(fields: [programId], references: [id], onDelete: Cascade)
+
+  jurisdiction GovernmentJurisdiction? @relation(fields: [jurisdictionId], references: [id], onDelete: SetNull)
+  @@index([programId, snapshotDate])
+  @@index([jurisdictionId, snapshotDate])
+  @@schema("bovine_government")
+}
+
+model GovernmentAlert {
+  id               String                  @id @default(uuid())
+  jurisdictionId   String
+  farmId           String?
+  animalId         String?
+  assignedToUserId String?
+  type             String
+  severity         GovernmentAlertSeverity
+  status           GovernmentAlertStatus   @default(NEW)
+  title            String
+  message          String
+  metricKey        String?
+  observedValue    Decimal?                @db.Decimal(18, 6)
+  thresholdValue   Decimal?                @db.Decimal(18, 6)
+  metadata         Json?
+  detectedAt       DateTime                @default(now())
+  acknowledgedAt   DateTime?
+  resolvedAt       DateTime?
+  createdAt        DateTime                @default(now())
+  updatedAt        DateTime                @updatedAt
+
+  jurisdiction GovernmentJurisdiction @relation(fields: [jurisdictionId], references: [id], onDelete: Cascade)
+  farm          Farm? @relation(fields: [farmId], references: [id], onDelete: SetNull)
+  animal        Animal? @relation(fields: [animalId], references: [id], onDelete: SetNull)
+  assignedTo    User? @relation(fields: [assignedToUserId], references: [id], onDelete: SetNull)
+
+  @@index([jurisdictionId, status, severity, detectedAt])
+  @@index([farmId, status])
+  @@schema("bovine_government")
+}
+
+model GovernmentMetricSnapshot {
+  id                 String   @id @default(uuid())
+  jurisdictionId     String
+  metricKey          String
+  periodStart        DateTime
+  periodEnd          DateTime
+  value              Decimal? @db.Decimal(24, 8)
+  numerator          Decimal? @db.Decimal(24, 8)
+  denominator        Decimal? @db.Decimal(24, 8)
+  coveragePercent    Decimal? @db.Decimal(7, 4)
+  reportingEntityCount Int?
+  expectedEntityCount  Int?
+  definitionVersion  String?
+  dimensions         Json?
+  calculatedAt       DateTime @default(now())
+  dataCutoffAt       DateTime?
+
+  jurisdiction GovernmentJurisdiction @relation(fields: [jurisdictionId], references: [id], onDelete: Cascade)
+
+  @@index([jurisdictionId, metricKey, periodEnd])
+  @@schema("bovine_government")
+}
+
+model GovernmentReportTemplate {
+  id             String   @id @default(uuid())
+  jurisdictionId String
+  createdByUserId String
+  name           String
+  category       String
+  definition     Json
+  sharedScope    String?
+  active         Boolean @default(true)
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  jurisdiction GovernmentJurisdiction @relation(fields: [jurisdictionId], references: [id], onDelete: Cascade)
+  createdBy     User @relation(fields: [createdByUserId], references: [id], onDelete: Restrict)
+  schedules     ScheduledReport[]
+  runs          GovernmentReportRun[]
+
+  @@index([jurisdictionId, category])
+  @@schema("bovine_government")
+}
+
+model ScheduledReport {
+  id                String                @id @default(uuid())
+  templateId        String
+  jurisdictionId    String
+  createdByUserId   String
+  name              String
+  scheduleRrule     String
+  recipients        Json
+  format            String
+  status            ScheduledReportStatus @default(ACTIVE)
+  lastRunAt         DateTime?
+  nextRunAt         DateTime?
+  createdAt         DateTime              @default(now())
+  updatedAt         DateTime              @updatedAt
+
+  template     GovernmentReportTemplate @relation(fields: [templateId], references: [id], onDelete: Cascade)
+  jurisdiction GovernmentJurisdiction @relation(fields: [jurisdictionId], references: [id], onDelete: Cascade)
+  createdBy    User @relation(fields: [createdByUserId], references: [id], onDelete: Restrict)
+  runs         GovernmentReportRun[]
+
+  @@index([status, nextRunAt])
+  @@schema("bovine_government")
+}
+
+model GovernmentReportRun {
+  id              String                 @id @default(uuid())
+  templateId      String
+  scheduledReportId String?
+  status          GovernmentReportStatus @default(GENERATING)
+  periodStart     DateTime?
+  periodEnd       DateTime?
+  dataCutoffAt    DateTime?
+  reportingCoverage Decimal?             @db.Decimal(7, 4)
+  metricDefinitionVersion String?
+  fileReference   String?
+  errorMessage    String?
+  generatedAt     DateTime?
+  createdAt       DateTime               @default(now())
+
+  template       GovernmentReportTemplate @relation(fields: [templateId], references: [id], onDelete: Cascade)
+  scheduledReport ScheduledReport? @relation(fields: [scheduledReportId], references: [id], onDelete: SetNull)
+
+  fileId String?
+  file FileAsset? @relation(fields: [fileId], references: [id], onDelete: SetNull)
+  @@index([templateId, createdAt])
+  @@index([status, createdAt])
+  @@schema("bovine_government")
+}

@@ -1,0 +1,9 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+  schemas  = ["bovine_core", "bovine_ops", "bovine_media", "bovine_genetics", "bovine_reproduction", "bovine_health", "bovine_marketplace", "bovine_government", "bovine_trust"]
+}

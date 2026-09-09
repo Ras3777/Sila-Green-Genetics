@@ -1,0 +1,1417 @@
+// Shared enums. Kept in bovine_core so all domain schemas can reuse them.
+
+enum UserStatus {
+  ACTIVE
+  INACTIVE
+  SUSPENDED
+  @@schema("bovine_core")
+}
+
+enum SystemRole {
+  ADMIN
+  PROGRAM_MANAGER
+  GOVERNMENT_OFFICIAL
+  REGISTRAR
+  GENETICIST
+  GENOMIC_ANALYST
+  LAB_TECHNICIAN
+  VETERINARIAN
+  AI_TECHNICIAN
+  ET_TECHNICIAN
+  SUPERVISOR
+  FARM_MANAGER
+  HERD_MANAGER
+  BREEDER
+  FARMER
+  TECHNICIAN
+  AUDITOR
+  VIEWER
+  COMPLIANCE_INSPECTOR
+  GOVERNMENT_ANALYST
+  DISTRICT_OFFICER
+  REGISTRY_OFFICER
+  MARKETPLACE_REVIEWER
+  @@schema("bovine_core")
+}
+
+enum OrganizationType {
+  GOVERNMENT
+  BREED_ASSOCIATION
+  BREEDING_COMPANY
+  FARM
+  FARMER_COOPERATIVE
+  GENETICS_LAB
+  SEMEN_CENTER
+  EMBRYO_CENTER
+  TEST_STATION
+  RESEARCH_INSTITUTE
+  UNIVERSITY
+  OTHER
+  @@schema("bovine_core")
+}
+
+enum FarmType {
+  DAIRY
+  BEEF
+  DUAL_PURPOSE
+  BREEDING
+  GENETIC_NUCLEUS
+  COMMERCIAL
+  RESEARCH
+  BULL_STATION
+  TEST_STATION
+  SEMEN_COLLECTION_CENTER
+  EMBRYO_CENTER
+  OTHER
+  @@schema("bovine_core")
+}
+
+enum Sex {
+  MALE
+  FEMALE
+  UNKNOWN
+  @@schema("bovine_core")
+}
+
+enum AnimalLifeStatus {
+  ALIVE
+  DEAD
+  SOLD
+  TRANSFERRED
+  SLAUGHTERED
+  LOST
+  EXPORTED
+  INACTIVE
+  UNKNOWN
+  @@schema("bovine_core")
+}
+
+enum AnimalManagementStatus {
+  ACTIVE
+  TEST_ANIMAL
+  CULL_CANDIDATE
+  RETIRED
+  @@schema("bovine_core")
+}
+
+enum BreedingStockStatus {
+  CANDIDATE
+  UNDER_EVALUATION
+  QUALIFIED
+  APPROVED
+  SUSPENDED
+  RETIRED
+  @@schema("bovine_core")
+}
+
+enum BreedingStockRole {
+  BREEDING_FEMALE
+  BREEDING_MALE
+  DONOR
+  RECIPIENT
+  AI_SIRE
+  NATURAL_SERVICE_SIRE
+  SEMEN_DONOR
+  EMBRYO_DONOR
+  @@schema("bovine_core")
+}
+
+enum IdentifierType {
+  INTERNAL
+  DGR
+  EAR_TAG
+  RFID
+  EID
+  TATTOO
+  BRAND
+  HERD_BOOK
+  BREED_REGISTRY
+  NATIONAL_LIVESTOCK_ID
+  LAB_ACCESSION
+  IMPORT_ID
+  OTHER
+  @@schema("bovine_core")
+}
+
+enum ParentType {
+  SIRE
+  DAM
+  @@schema("bovine_core")
+}
+
+enum ParentageSource {
+  OWNER_REPORTED
+  FARM_RECORD
+  BREED_REGISTRY
+  GOVERNMENT_REGISTRY
+  IMPORTED
+  DNA_VERIFIED
+  GENOMIC_DISCOVERY
+  OTHER
+  @@schema("bovine_core")
+}
+
+enum ParentageStatus {
+  PROPOSED
+  RECORDED
+  VERIFIED
+  EXCLUDED
+  DISPUTED
+  @@schema("bovine_core")
+}
+
+enum ParentageVerificationMethod {
+  PEDIGREE_RECORD
+  MICROSATELLITE
+  SNP_PARENTAGE
+  WHOLE_GENOME
+  OTHER
+  @@schema("bovine_core")
+}
+
+enum CompositionSource {
+  PEDIGREE_DERIVED
+  OWNER_REPORTED
+  REGISTRY
+  GENOMIC_INFERRED
+  IMPORTED
+  OTHER
+  @@schema("bovine_core")
+}
+
+enum TraitCategory {
+  GROWTH
+  MATERNAL
+  FERTILITY
+  CALVING
+  DAIRY
+  CARCASS
+  FEED_EFFICIENCY
+  HEALTH
+  TEMPERAMENT
+  MORPHOLOGY
+  ADAPTATION
+  LONGEVITY
+  GENOMIC
+  OTHER
+  @@schema("bovine_core")
+}
+
+enum SelectionDirection {
+  HIGHER_IS_BETTER
+  LOWER_IS_BETTER
+  INTERMEDIATE_OPTIMUM
+  CONTEXT_DEPENDENT
+  @@schema("bovine_core")
+}
+
+enum ObservationQualityStatus {
+  RAW
+  VALIDATED
+  ADJUSTED
+  SUSPECT
+  REJECTED
+  @@schema("bovine_core")
+}
+
+enum MeasurementStage {
+  BIRTH
+  PRE_WEANING
+  WEANING
+  POST_WEANING
+  YEARLING
+  MATURE
+  LACTATION
+  CARCASS
+  TEST_STATION
+  OTHER
+  @@schema("bovine_core")
+}
+
+enum GeneticSampleType {
+  BLOOD
+  HAIR_FOLLICLE
+  SEMEN
+  TISSUE
+  EAR_NOTCH
+  SALIVA
+  EMBRYO_BIOPSY
+  OTHER
+  @@schema("bovine_core")
+}
+
+enum SampleStatus {
+  COLLECTED
+  SHIPPED
+  RECEIVED
+  PROCESSING
+  COMPLETED
+  REJECTED
+  DESTROYED
+  @@schema("bovine_core")
+}
+
+enum GenotypeQcStatus {
+  PENDING
+  PASSED
+  WARNING
+  FAILED
+  @@schema("bovine_core")
+}
+
+enum MarkerResultStatus {
+  DETECTED
+  NOT_DETECTED
+  HETEROZYGOUS
+  HOMOZYGOUS
+  INCONCLUSIVE
+  @@schema("bovine_core")
+}
+
+enum GeneticConditionStatus {
+  FREE
+  CARRIER
+  AFFECTED
+  SUSPECTED
+  INCONCLUSIVE
+  NOT_TESTED
+  @@schema("bovine_core")
+}
+
+enum GeneticEvaluationMethod {
+  PEDIGREE_BLUP
+  ANIMAL_MODEL_BLUP
+  GBLUP
+  SINGLE_STEP_GBLUP
+  SNP_BLUP
+  MULTI_TRAIT
+  MACE
+  GMACE
+  EXTERNAL
+  OTHER
+  @@schema("bovine_core")
+}
+
+enum EvaluationRunStatus {
+  DRAFT
+  RUNNING
+  VALIDATING
+  PUBLISHED
+  SUPERSEDED
+  FAILED
+  @@schema("bovine_core")
+}
+
+enum EstimateType {
+  EBV
+  EPD
+  GEBV
+  DGV
+  PARENT_AVERAGE
+  INDEX
+  PHENOTYPIC_INDEX
+  @@schema("bovine_core")
+}
+
+enum BreedingProgramStatus {
+  PLANNING
+  ACTIVE
+  PAUSED
+  COMPLETED
+  ARCHIVED
+  @@schema("bovine_core")
+}
+
+enum BreedingObjectiveType {
+  DAIRY_EFFICIENCY
+  TERMINAL_BEEF
+  MATERNAL_BEEF
+  HEAT_TOLERANCE
+  LOW_INPUT
+  FERTILITY
+  FEED_EFFICIENCY
+  CARCASS_QUALITY
+  MILK_SOLIDS
+  DUAL_PURPOSE
+  CUSTOM
+  @@schema("bovine_core")
+}
+
+enum MatingPlanStatus {
+  DRAFT
+  CALCULATING
+  READY
+  APPROVED
+  ACTIVE
+  COMPLETED
+  ARCHIVED
+  @@schema("bovine_core")
+}
+
+enum MatingRecommendationStatus {
+  PROPOSED
+  APPROVED
+  SELECTED
+  REJECTED
+  USED
+  @@schema("bovine_core")
+}
+
+enum BreedingEventType {
+  NATURAL_SERVICE
+  ARTIFICIAL_INSEMINATION
+  EMBRYO_TRANSFER
+  IVF
+  OTHER
+  @@schema("bovine_core")
+}
+
+enum PregnancyResult {
+  PREGNANT
+  OPEN
+  RECHECK
+  INCONCLUSIVE
+  @@schema("bovine_core")
+}
+
+enum PregnancyStatus {
+  SUSPECTED
+  CONFIRMED
+  LOST
+  COMPLETED
+  OPEN
+  @@schema("bovine_core")
+}
+
+enum CalvingEase {
+  UNASSISTED
+  EASY_ASSIST
+  HARD_ASSIST
+  SURGICAL
+  MALPRESENTATION
+  UNKNOWN
+  @@schema("bovine_core")
+}
+
+enum BirthOutcome {
+  LIVE
+  STILLBORN
+  ABORTED
+  NEONATAL_DEATH
+  UNKNOWN
+  @@schema("bovine_core")
+}
+
+enum BirthType {
+  SINGLE
+  TWIN
+  TRIPLET
+  MULTIPLE
+  UNKNOWN
+  @@schema("bovine_core")
+}
+
+enum FetalPresentation {
+  ANTERIOR
+  POSTERIOR
+  BREECH
+  OTHER
+  UNKNOWN
+  @@schema("bovine_core")
+}
+
+enum EmbryoOrigin {
+  IN_VIVO
+  IVF
+  @@schema("bovine_core")
+}
+
+enum EmbryoState {
+  FRESH
+  FROZEN
+  THAWED
+  TRANSFERRED
+  DISCARDED
+  USED_FOR_RESEARCH
+  @@schema("bovine_core")
+}
+
+enum SemenType {
+  CONVENTIONAL
+  SEXED_FEMALE
+  SEXED_MALE
+  REVERSE_SORTED
+  OTHER
+  @@schema("bovine_core")
+}
+
+enum SemenBatchStatus {
+  AVAILABLE
+  QUARANTINED
+  DEPLETED
+  EXPIRED
+  DISCARDED
+  @@schema("bovine_core")
+}
+
+enum OwnershipType {
+  OWNED
+  LEASED
+  LOANED
+  CONSIGNED
+  CUSTODIAL
+  @@schema("bovine_core")
+}
+
+enum MovementType {
+  ARRIVAL
+  INTERNAL_TRANSFER
+  EXTERNAL_TRANSFER
+  SALE
+  PURCHASE
+  LOAN
+  RETURN
+  TEST_STATION
+  SEMEN_CENTER
+  EMBRYO_CENTER
+  EXPORT
+  IMPORT
+  OTHER
+  @@schema("bovine_core")
+}
+
+enum HealthEventStatus {
+  OPEN
+  UNDER_TREATMENT
+  RESOLVED
+  CHRONIC
+  CLOSED
+  @@schema("bovine_core")
+}
+
+enum AdministrationRoute {
+  IM
+  IV
+  SC
+  ORAL
+  INTRANASAL
+  TOPICAL
+  OTHER
+  @@schema("bovine_core")
+}
+
+enum MediaType {
+  IMAGE
+  VIDEO
+  DOCUMENT
+  GENOTYPE_RAW
+  GENOTYPE_PROCESSED
+  CERTIFICATE
+  LAB_REPORT
+  OTHER
+  @@schema("bovine_core")
+}
+
+enum ApprovalStatus {
+  PENDING
+  APPROVED
+  REJECTED
+  CANCELLED
+  @@schema("bovine_core")
+}
+
+enum AuditAction {
+  CREATE
+  UPDATE
+  DELETE
+  VERIFY
+  APPROVE
+  REJECT
+  IMPORT
+  EXPORT
+  CORRECT
+  MERGE
+  @@schema("bovine_core")
+}
+
+enum AnimalOperationalStatus {
+  NORMAL
+  WATCH
+  SICK
+  UNDER_TREATMENT
+  QUARANTINED
+  RECOVERING
+  CRITICAL
+  @@schema("bovine_core")
+}
+
+enum AnimalObservationType {
+  BODY_TEMPERATURE
+  BODY_WEIGHT
+  BODY_CONDITION_SCORE
+  HEART_RATE
+  RESPIRATION_RATE
+  HYDRATION
+  APPETITE
+  ALERTNESS
+  ACTIVITY
+  RUMINATION
+  LYING_TIME
+  STANDING_TIME
+  WALKING_STEPS
+  FEED_INTAKE
+  WATER_INTAKE
+  MANURE_SCORE
+  RUMEN_FILL
+  LAMENESS_SCORE
+  MOBILITY_SCORE
+  CLEANLINESS_SCORE
+  COAT_CONDITION
+  COUGH
+  NASAL_DISCHARGE
+  EYE_DISCHARGE
+  DIARRHEA
+  CONSTIPATION
+  BLOATING
+  SKIN_LESION
+  WOUND
+  SWELLING
+  UDDER_CONDITION
+  ABNORMAL_DISCHARGE
+  PAIN_SCORE
+  HEAT_STRESS_SCORE
+  ESTRUS_SCORE
+  FEED_REFUSAL
+  EATING_TIME
+  DRINKING_FREQUENCY
+  URINE_CONDITION
+  SOCIAL_BEHAVIOR
+  ISOLATION_BEHAVIOR
+  AGGRESSION
+  MOUNTING_ACTIVITY
+  ABNORMAL_VOCALIZATION
+  HOOF_CONDITION
+  TICK_COUNT
+  ECTOPARASITE_SCORE
+  EYE_CONDITION
+  EAR_CONDITION
+  RESPIRATORY_EFFORT
+  PANTING_SCORE
+  UDDER_SWELLING
+  MILK_ABNORMALITY
+  REPRODUCTIVE_DISCHARGE
+  OTHER
+  @@schema("bovine_core")
+}
+
+enum ObservationSource {
+  MANUAL
+  SENSOR
+  MILKING_SYSTEM
+  WEIGHING_SYSTEM
+  LAB_IMPORT
+  MOBILE_APP
+  SYSTEM_DERIVED
+  EXTERNAL_IMPORT
+  OTHER
+  @@schema("bovine_core")
+}
+
+enum ObservationSeverity {
+  NORMAL
+  INFO
+  LOW
+  MODERATE
+  HIGH
+  CRITICAL
+  @@schema("bovine_core")
+}
+
+enum AnimalOperationalEventType {
+  ROUTINE_CHECK
+  HEALTH_ALERT
+  SICK
+  RECOVERED
+  INJURY
+  ESCAPED
+  RETURNED
+  QUARANTINED
+  RELEASED_FROM_QUARANTINE
+  HEAT_DETECTED
+  BREEDING_PERFORMED
+  PREGNANCY_CHECKED
+  PREGNANCY_CONFIRMED
+  PREGNANCY_LOST
+  CALVING_STARTED
+  CALVED
+  WEIGHED
+  VACCINATED
+  TREATED
+  MEDICATION_ADMINISTERED
+  HOOF_TRIMMED
+  DEHORNED
+  CASTRATED
+  WEANED
+  FEED_CHANGED
+  MANAGEMENT_GROUP_CHANGED
+  MOVED
+  DRIED_OFF
+  PRODUCTION_PERIOD_STARTED
+  PRODUCTION_PERIOD_ENDED
+  SOLD
+  TRANSFERRED
+  SLAUGHTERED
+  DIED
+  OTHER
+  @@schema("bovine_core")
+}
+
+enum AnimalTaskType {
+  ROUTINE_CHECK
+  HEALTH_RECHECK
+  VETERINARY_VISIT
+  TREATMENT
+  MEDICATION
+  VACCINATION
+  DEWORMING
+  HOOF_TRIMMING
+  WEIGHING
+  BODY_CONDITION_SCORING
+  HEAT_CHECK
+  BREEDING
+  PREGNANCY_CHECK
+  CALVING_WATCH
+  WEANING
+  MOVEMENT
+  IDENTIFICATION
+  SAMPLE_COLLECTION
+  PERFORMANCE_MEASUREMENT
+  OTHER
+  @@schema("bovine_core")
+}
+
+enum TaskStatus {
+  OPEN
+  IN_PROGRESS
+  COMPLETED
+  CANCELLED
+  OVERDUE
+  @@schema("bovine_core")
+}
+
+enum SensorDeviceType {
+  EAR_TAG
+  COLLAR
+  RUMEN_BOLUS
+  LEG_TAG
+  PEDOMETER
+  GPS_TRACKER
+  WEIGH_SCALE
+  FEEDING_STATION
+  WATER_METER
+  MILKING_SYSTEM
+  THERMOMETER
+  CAMERA
+  OTHER
+  @@schema("bovine_core")
+}
+
+enum SensorMetricType {
+  BODY_TEMPERATURE
+  ACTIVITY_INDEX
+  STEPS
+  RUMINATION_MINUTES
+  EATING_MINUTES
+  DRINKING_EVENTS
+  LYING_MINUTES
+  STANDING_MINUTES
+  HEART_RATE
+  RESPIRATION_RATE
+  LIVE_WEIGHT
+  FEED_INTAKE
+  WATER_INTAKE
+  LOCATION_LATITUDE
+  LOCATION_LONGITUDE
+  ESTRUS_SCORE
+  HEALTH_SCORE
+  HEAT_STRESS_SCORE
+  OTHER
+  @@schema("bovine_core")
+}
+
+enum SensorReadingQuality {
+  RAW
+  VALID
+  SUSPECT
+  INVALID
+  MISSING
+  @@schema("bovine_core")
+}
+
+enum ProductionPeriodType {
+  LACTATION
+  FATTENING
+  GROWTH
+  PERFORMANCE_TEST
+  BREEDING_SEASON
+  DRY_PERIOD
+  CUSTOM
+  @@schema("bovine_core")
+}
+
+enum ProductionRecordType {
+  MILK_YIELD
+  MILK_FAT_PERCENT
+  MILK_PROTEIN_PERCENT
+  MILK_LACTOSE_PERCENT
+  SOMATIC_CELL_COUNT
+  LIVE_WEIGHT_GAIN
+  AVERAGE_DAILY_GAIN
+  FEED_CONVERSION_RATIO
+  DRY_MATTER_INTAKE
+  RESIDUAL_FEED_INTAKE
+  CARCASS_WEIGHT
+  OTHER
+  @@schema("bovine_core")
+}
+
+enum MedicationAdministrationStatus {
+  GIVEN
+  PARTIAL
+  MISSED
+  REFUSED
+  SPILLED
+  CANCELLED
+  OTHER
+  @@schema("bovine_core")
+}
+
+enum PreventiveCareType {
+  DEWORMING
+  INTERNAL_PARASITE_CONTROL
+  EXTERNAL_PARASITE_CONTROL
+  DIPPING
+  SPRAYING
+  FLY_CONTROL
+  HOOF_TRIMMING
+  DEHORNING
+  CASTRATION
+  NAVEL_CARE
+  VITAMIN_MINERAL_SUPPLEMENT
+  ROUTINE_EXAMINATION
+  BIOSECURITY_PROCEDURE
+  OTHER
+  @@schema("bovine_core")
+}
+
+enum FarmOperationalEventType {
+  BIOSECURITY_CHECK
+  BIOSECURITY_BREACH
+  DISEASE_OUTBREAK
+  QUARANTINE_STARTED
+  QUARANTINE_ENDED
+  FEED_DELIVERY
+  FEED_SHORTAGE
+  WATER_SUPPLY_ISSUE
+  EQUIPMENT_FAILURE
+  POWER_OUTAGE
+  PASTURE_CHANGE
+  WEATHER_ALERT
+  HEAT_STRESS_ALERT
+  FLOODING
+  FIRE
+  PREDATOR_INCIDENT
+  STAFFING_ISSUE
+  OTHER
+  @@schema("bovine_core")
+}
+
+enum NotificationType {
+  SYSTEM
+  ALERT
+  REMINDER
+  WORKFLOW
+  GENETICS
+  REPRODUCTION
+  HEALTH
+  DATA_QUALITY
+  MARKETPLACE
+  COMPLIANCE
+  GOVERNMENT
+  CERTIFICATE
+  MOVEMENT
+  @@schema("bovine_core")
+}
+
+enum MovementStatus {
+  PLANNED
+  APPROVED
+  IN_TRANSIT
+  ARRIVED
+  COMPLETED
+  CANCELLED
+  REJECTED
+  EXCEPTION
+  @@schema("bovine_core")
+}
+
+enum MovementClearanceStatus {
+  NOT_REQUIRED
+  PENDING
+  APPROVED
+  REJECTED
+  EXPIRED
+  @@schema("bovine_core")
+}
+
+enum DataQualitySeverity {
+  INFO
+  WARNING
+  MAJOR
+  CRITICAL
+  @@schema("bovine_core")
+}
+
+enum DataQualityStatus {
+  OPEN
+  ASSIGNED
+  IN_REVIEW
+  CORRECTION_REQUESTED
+  RESOLVED
+  DISMISSED
+  @@schema("bovine_core")
+}
+
+enum ParentageEvidenceType {
+  DNA_TEST
+  GENOMIC_ASSAY
+  REGISTRY_CERTIFICATE
+  FARM_RECORD
+  GOVERNMENT_RECORD
+  IMPORT_SOURCE
+  OTHER
+  @@schema("bovine_core")
+}
+
+enum ParentageCorrectionStatus {
+  DRAFT
+  SUBMITTED
+  UNDER_REVIEW
+  APPROVED
+  REJECTED
+  APPLIED
+  CANCELLED
+  @@schema("bovine_core")
+}
+
+enum MediaCategory {
+  PROFILE
+  IDENTIFICATION
+  BODY_CONDITION
+  GROWTH
+  MATERNAL_PHASE
+  WEANING_PHASE
+  YEARLING_PHASE
+  PHENOTYPE
+  CONFORMATION
+  ULTRASOUND
+  HEALTH
+  WOUND
+  TREATMENT
+  LAMENESS
+  HOOF
+  VACCINATION
+  REPRODUCTION
+  ESTRUS
+  AI
+  EMBRYO_TRANSFER
+  PREGNANCY
+  CALVING
+  NEWBORN
+  PROGENY
+  SEMEN
+  EMBRYO
+  GENETICS
+  LAB_RESULT
+  CERTIFICATE
+  MARKETPLACE
+  INSPECTION
+  MOVEMENT
+  FARM_VISIT
+  OTHER
+  @@schema("bovine_core")
+}
+
+enum MediaVisibility {
+  PRIVATE
+  FARM_TEAM
+  ORGANIZATION
+  SUPERVISOR
+  GOVERNMENT_AUTHORIZED
+  MARKETPLACE_PUBLIC
+  @@schema("bovine_core")
+}
+
+enum MediaVerificationStatus {
+  UNVERIFIED
+  PENDING_REVIEW
+  VERIFIED
+  REJECTED
+  @@schema("bovine_core")
+}
+
+enum MediaRelationType {
+  EVIDENCE
+  BEFORE
+  AFTER
+  PROFILE
+  IDENTIFICATION
+  SUPPORTING
+  INSPECTION
+  PUBLIC_LISTING
+  ULTRASOUND
+  PROGRESS
+  OTHER
+  @@schema("bovine_core")
+}
+
+enum MarketplaceAssetType {
+  LIVE_ANIMAL
+  SEMEN
+  EMBRYO
+  BREEDING_SERVICE
+  PREGNANT_RECIPIENT
+  DONOR_CYCLE
+  AI_SERVICE
+  ET_SERVICE
+  @@schema("bovine_core")
+}
+
+enum MarketplaceListingType {
+  FIXED_PRICE
+  NEGOTIABLE
+  PRIVATE_TREATY
+  AUCTION
+  @@schema("bovine_core")
+}
+
+enum MarketplaceListingStatus {
+  DRAFT
+  SUBMITTED
+  UNDER_REVIEW
+  REQUIRES_CHANGES
+  APPROVED
+  ACTIVE
+  PAUSED
+  RESERVED
+  SOLD
+  EXPIRED
+  REJECTED
+  CANCELLED
+  WITHDRAWN
+  @@schema("bovine_core")
+}
+
+enum MarketplaceDocumentVisibility {
+  PUBLIC
+  AFTER_INQUIRY
+  AFTER_OFFER
+  AFTER_RESERVATION
+  PRIVATE
+  @@schema("bovine_core")
+}
+
+enum MarketplaceInquiryType {
+  GENERAL
+  PEDIGREE
+  HEALTH_DOCUMENT
+  GENOMIC_DOCUMENT
+  INSPECTION
+  TRANSPORT
+  PRICE
+  OTHER
+  @@schema("bovine_core")
+}
+
+enum MarketplaceInquiryStatus {
+  OPEN
+  AWAITING_SELLER
+  AWAITING_BUYER
+  CLOSED
+  @@schema("bovine_core")
+}
+
+enum MarketplaceOfferStatus {
+  PENDING
+  ACCEPTED
+  REJECTED
+  COUNTERED
+  WITHDRAWN
+  EXPIRED
+  @@schema("bovine_core")
+}
+
+enum MarketplaceReservationStatus {
+  ACTIVE
+  EXTENDED
+  CANCELLED
+  EXPIRED
+  CONVERTED_TO_ORDER
+  @@schema("bovine_core")
+}
+
+enum MarketplaceDepositStatus {
+  NOT_REQUIRED
+  PENDING
+  PAID
+  REFUNDED
+  FORFEITED
+  @@schema("bovine_core")
+}
+
+enum MarketplaceOrderStatus {
+  OFFER_ACCEPTED
+  RESERVED
+  INSPECTION_PENDING
+  INSPECTION_PASSED
+  INSPECTION_FAILED
+  PAYMENT_PENDING
+  SALE_CONFIRMED
+  TRANSFER_PENDING
+  DELIVERY_PENDING
+  COMPLETED
+  CANCELLED
+  DISPUTED
+  @@schema("bovine_core")
+}
+
+enum MarketplaceInspectionType {
+  PHYSICAL
+  VETERINARY
+  PREGNANCY_CONFIRMATION
+  SEMEN_QUALITY
+  GENOMIC_DOCUMENT
+  IDENTITY
+  OTHER
+  @@schema("bovine_core")
+}
+
+enum MarketplaceInspectionStatus {
+  REQUESTED
+  SCHEDULED
+  IN_PROGRESS
+  PASSED
+  FAILED
+  RECHECK_REQUIRED
+  CANCELLED
+  @@schema("bovine_core")
+}
+
+enum MarketplacePaymentStatus {
+  NOT_REQUIRED
+  PENDING
+  PARTIALLY_PAID
+  PAID
+  REFUNDED
+  FAILED
+  @@schema("bovine_core")
+}
+
+enum MarketplaceTransferStatus {
+  NOT_REQUIRED
+  PENDING
+  AUTHORIZED
+  COMPLETED
+  REJECTED
+  @@schema("bovine_core")
+}
+
+enum MarketplaceDeliveryStatus {
+  NOT_REQUIRED
+  PENDING
+  IN_TRANSIT
+  DELIVERED
+  FAILED
+  @@schema("bovine_core")
+}
+
+enum DiseaseIncidentStatus {
+  OPEN
+  MONITORING
+  CONTAINED
+  CLOSED
+  @@schema("bovine_core")
+}
+
+enum DiseaseConfirmationStatus {
+  SUSPECTED
+  PROBABLE
+  CONFIRMED
+  RULED_OUT
+  @@schema("bovine_core")
+}
+
+enum QuarantineStatus {
+  PLANNED
+  ACTIVE
+  RELEASE_PENDING
+  RELEASED
+  CANCELLED
+  @@schema("bovine_core")
+}
+
+enum JurisdictionType {
+  NATIONAL
+  REGION
+  STATE
+  ZONE
+  PROVINCE
+  DISTRICT
+  WOREDA
+  CITY
+  OTHER
+  @@schema("bovine_core")
+}
+
+enum GovernmentOfficeType {
+  FEDERAL_MINISTRY
+  REGIONAL_BUREAU
+  ZONE_OFFICE
+  DISTRICT_VETERINARY_OFFICE
+  PROGRAM_OFFICE
+  OTHER
+  @@schema("bovine_core")
+}
+
+enum ComplianceAuditStatus {
+  PLANNED
+  IN_PROGRESS
+  COMPLETED
+  CANCELLED
+  @@schema("bovine_core")
+}
+
+enum ComplianceItemStatus {
+  COMPLIANT
+  PARTIAL
+  NON_COMPLIANT
+  NOT_APPLICABLE
+  NOT_ASSESSED
+  @@schema("bovine_core")
+}
+
+enum FindingSeverity {
+  OBSERVATION
+  MINOR
+  MAJOR
+  CRITICAL
+  @@schema("bovine_core")
+}
+
+enum FindingStatus {
+  OPEN
+  ACKNOWLEDGED
+  CORRECTIVE_ACTION
+  REVIEW_PENDING
+  RESOLVED
+  WAIVED
+  @@schema("bovine_core")
+}
+
+enum CorrectiveActionStatus {
+  OPEN
+  RESPONDED
+  EVIDENCE_SUBMITTED
+  UNDER_REVIEW
+  ACCEPTED
+  REJECTED
+  RESOLVED
+  OVERDUE
+  @@schema("bovine_core")
+}
+
+enum GovernmentInspectionStatus {
+  PLANNED
+  SCHEDULED
+  IN_PROGRESS
+  COMPLETED
+  FOLLOW_UP_REQUIRED
+  CANCELLED
+  OVERDUE
+  @@schema("bovine_core")
+}
+
+enum GovernmentInvestigationType {
+  DISEASE
+  IDENTITY_FRAUD
+  MOVEMENT_IRREGULARITY
+  PEDIGREE_CONFLICT
+  GENETIC_PROGRAM_VIOLATION
+  FARM_COMPLIANCE
+  ANIMAL_WELFARE
+  DATA_INTEGRITY
+  OTHER
+  @@schema("bovine_core")
+}
+
+enum GovernmentInvestigationPriority {
+  LOW
+  MEDIUM
+  HIGH
+  CRITICAL
+  @@schema("bovine_core")
+}
+
+enum GovernmentInvestigationStatus {
+  OPEN
+  TRIAGE
+  INVESTIGATING
+  ACTION_REQUIRED
+  RESOLVED
+  CLOSED
+  CANCELLED
+  @@schema("bovine_core")
+}
+
+enum EvidenceStatus {
+  UNVERIFIED
+  VERIFIED
+  DISPUTED
+  SUPERSEDED
+  @@schema("bovine_core")
+}
+
+enum GovernmentAlertSeverity {
+  INFO
+  WATCH
+  WARNING
+  CRITICAL
+  @@schema("bovine_core")
+}
+
+enum GovernmentAlertStatus {
+  NEW
+  ACKNOWLEDGED
+  INVESTIGATING
+  ACTION_REQUIRED
+  RESOLVED
+  DISMISSED
+  @@schema("bovine_core")
+}
+
+enum GovernmentProgramType {
+  VACCINATION
+  GENOTYPING
+  BREED_CONSERVATION
+  ARTIFICIAL_INSEMINATION
+  TRACEABILITY
+  REGISTRATION
+  OTHER
+  @@schema("bovine_core")
+}
+
+enum GovernmentProgramStatus {
+  PLANNING
+  ACTIVE
+  PAUSED
+  COMPLETED
+  CANCELLED
+  @@schema("bovine_core")
+}
+
+enum GovernmentReportStatus {
+  DRAFT
+  GENERATING
+  READY
+  REVIEWED
+  APPROVED
+  PUBLISHED
+  FAILED
+  SUPERSEDED
+  @@schema("bovine_core")
+}
+
+enum ScheduledReportStatus {
+  ACTIVE
+  PAUSED
+  DISABLED
+  @@schema("bovine_core")
+}
+
+enum CertificateType {
+  GENETIC_REGISTRATION
+  PEDIGREE_CERTIFICATE
+  GENOMIC_CERTIFICATE
+  BREEDING_STOCK_CERTIFICATE
+  PARENTAGE_CERTIFICATE
+  PERFORMANCE_CERTIFICATE
+  OTHER_OFFICIAL_CERTIFICATE
+  @@schema("bovine_core")
+}
+
+enum CertificateStatus {
+  DRAFT
+  GENERATING
+  SIGNING
+  REGISTERING
+  ACTIVE
+  SUPERSEDED
+  REVOKED
+  EXPIRED
+  FAILED
+  @@schema("bovine_core")
+}
+
+enum CertificateLedgerEventType {
+  GENERATED
+  DIGEST_REGISTERED
+  SIGNED
+  ACTIVATED
+  VERIFIED
+  SUPERSEDED
+  REVOKED
+  REISSUED
+  EXPIRED
+  @@schema("bovine_core")
+}
+
+enum CertificateVerificationStatus {
+  VALID
+  INVALID
+  HASH_MISMATCH
+  SIGNATURE_INVALID
+  UNKNOWN_CERTIFICATE
+  REVOKED
+  SUPERSEDED
+  EXPIRED
+  ISSUER_UNTRUSTED
+  FILE_CORRUPTED
+  VERIFICATION_ERROR
+  @@schema("bovine_core")
+}
+
+enum CertificateVerificationSource {
+  INTERNAL_UPLOAD
+  PUBLIC_QR
+  PUBLIC_MANUAL
+  MARKETPLACE
+  GOVERNMENT
+  API
+  @@schema("bovine_core")
+}
+
+enum IssuerTrustStatus {
+  PENDING
+  TRUSTED
+  SUSPENDED
+  REVOKED
+  @@schema("bovine_core")
+}
+
+enum SigningKeyStatus {
+  ACTIVE
+  RETIRED_TRUSTED
+  REVOKED
+  EXPIRED
+  @@schema("bovine_core")
+}

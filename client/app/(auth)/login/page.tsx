@@ -12,7 +12,6 @@ import {
   Eye,
   EyeOff,
   ArrowRight,
-  Phone,
   Sprout,
   BarChart3,
   Users,
@@ -20,6 +19,7 @@ import {
   Check,
   Sparkles,
 } from 'lucide-react';
+import { DEMO_EMAIL, isDemoEmail } from '@/lib/demo-auth';
 
 export default function LoginPage() {
   const router = useRouter();
@@ -31,15 +31,17 @@ export default function LoginPage() {
   const [rememberMe, setRememberMe] = useState(true);
   const [isLoading, setIsLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
-  const [isPhoneModalOpen, setIsPhoneModalOpen] = useState(false);
-  const [phoneNumber, setPhoneNumber] = useState('');
 
   const handleSignIn = (e: React.FormEvent) => {
     e.preventDefault();
     setErrorMessage('');
 
     if (!identifier.trim()) {
-      setErrorMessage('Please enter your email or registered phone number.');
+      setErrorMessage('Please enter the demo email address.');
+      return;
+    }
+    if (!isDemoEmail(identifier)) {
+      setErrorMessage('This preview is limited to the invited demo email address.');
       return;
     }
     if (!password) {
@@ -48,29 +50,27 @@ export default function LoginPage() {
     }
 
     setIsLoading(true);
-
-    // Simulate authentication delay and redirect
-    setTimeout(() => {
-      setIsLoading(false);
-      router.push('/bovine/dashboard');
-    }, 600);
+    fetch('/api/auth/login', {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      credentials: 'include',
+      body: JSON.stringify({ email: identifier, password }),
+    })
+      .then(async (response) => {
+        if (!response.ok) {
+          const body = await response.json().catch(() => null);
+          throw new Error(body?.error || 'Unable to sign in.');
+        }
+        router.push('/bovine/dashboard');
+      })
+      .catch((error: unknown) => setErrorMessage(error instanceof Error ? error.message : 'Unable to sign in.'))
+      .finally(() => setIsLoading(false));
   };
 
   const handleQuickDemo = () => {
-    setIdentifier('j.miller@apexbovine.com');
-    setPassword('••••••••••••');
+    setIdentifier(DEMO_EMAIL);
+    setPassword('');
     setErrorMessage('');
-  };
-
-  const handlePhoneSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!phoneNumber.trim()) return;
-    setIsLoading(true);
-    setTimeout(() => {
-      setIsLoading(false);
-      setIsPhoneModalOpen(false);
-      router.push('/bovine/dashboard');
-    }, 600);
   };
 
   return (
@@ -246,11 +246,11 @@ export default function LoginPage() {
                       <Mail className="w-4 h-4" />
                     </div>
                     <input
-                      type="text"
+                      type="email"
                       id="identifier-input"
                       value={identifier}
                       onChange={(e) => setIdentifier(e.target.value)}
-                      placeholder="Email or phone"
+                      placeholder="Demo email address"
                       className="w-full h-11 sm:h-12 pl-10 pr-4 text-xs sm:text-sm text-[#1A1A18] placeholder-[#9E9B93] bg-transparent outline-none rounded-xl"
                     />
                   </div>
@@ -325,25 +325,10 @@ export default function LoginPage() {
                   </div>
                 </div>
 
-                {/* Secondary Button: Continue with phone */}
-                <button
-                  type="button"
-                  onClick={() => setIsPhoneModalOpen(true)}
-                  className="w-full h-11 sm:h-12 rounded-xl border border-[#DCD9D0] bg-white hover:bg-[#F9F8F5] active:scale-[0.99] text-[#242320] font-medium text-xs sm:text-sm flex items-center justify-center gap-2.5 transition-colors cursor-pointer"
-                >
-                  <Phone className="w-4 h-4 text-[#242320]" />
-                  <span>Continue with phone</span>
-                </button>
-
-                {/* Create a farmer account Link */}
+                {/* Demo access note */}
                 <div className="text-center text-xs text-[#6B6A64] mt-6">
-                  <span>New to the platform? </span>
-                  <Link
-                    href="/register"
-                    className="font-bold text-[#2A4736] hover:underline"
-                  >
-                    Create a farmer account
-                  </Link>
+                  <span>Demo access is currently limited to </span>
+                  <span className="font-bold text-[#2A4736]">{DEMO_EMAIL}</span>
                 </div>
 
                 {/* Quick Demo Helper for Evaluators */}
@@ -354,7 +339,7 @@ export default function LoginPage() {
                     className="inline-flex items-center gap-1.5 text-[11px] text-[#7A7870] hover:text-[#2A4736] transition-colors"
                   >
                     <Sparkles className="w-3 h-3 text-[#2A4736]" />
-                    <span>Click to auto-fill manager credentials</span>
+                    <span>Fill the invited demo email</span>
                   </button>
                 </div>
               </div>
@@ -380,50 +365,6 @@ export default function LoginPage() {
       {/* Bottom Footer */}
       <BovineAuthFooter variant="login" />
 
-      {/* Phone Login Modal */}
-      {isPhoneModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-xs p-4 animate-in fade-in duration-200">
-          <div className="bg-white rounded-2xl p-6 max-w-sm w-full shadow-2xl border border-stone-200 space-y-4">
-            <div>
-              <h4 className="text-base font-bold text-stone-900">Sign in with Mobile Phone</h4>
-              <p className="text-xs text-stone-500 mt-1">
-                Enter your mobile number to receive a 6-digit verification code.
-              </p>
-            </div>
-
-            <form onSubmit={handlePhoneSubmit} className="space-y-3 text-xs">
-              <div className="relative rounded-xl border border-[#DCD9D0] bg-[#FCFCFA] p-2.5 flex items-center gap-2">
-                <Phone className="w-4 h-4 text-stone-500" />
-                <input
-                  type="tel"
-                  required
-                  placeholder="+1 (555) 000-0000"
-                  value={phoneNumber}
-                  onChange={(e) => setPhoneNumber(e.target.value)}
-                  className="w-full text-xs text-stone-900 bg-transparent outline-none font-mono"
-                />
-              </div>
-
-              <div className="flex items-center justify-end gap-2 pt-2">
-                <button
-                  type="button"
-                  onClick={() => setIsPhoneModalOpen(false)}
-                  className="px-3 py-1.5 rounded-lg text-stone-600 hover:bg-stone-100 font-semibold"
-                >
-                  Cancel
-                </button>
-                <button
-                  type="submit"
-                  disabled={isLoading}
-                  className="px-4 py-1.5 rounded-lg bg-[#2A4736] text-white font-semibold hover:bg-[#203629]"
-                >
-                  {isLoading ? 'Sending...' : 'Send SMS Code'}
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
     </div>
   );
 }

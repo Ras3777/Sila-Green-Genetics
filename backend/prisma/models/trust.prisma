@@ -1,0 +1,148 @@
+// TRUST DOMAIN
+
+model CertificateIssuer {
+  id             String            @id @default(uuid())
+  code           String            @unique
+  name           String
+  organizationId String?
+  trustStatus    IssuerTrustStatus @default(PENDING)
+  publicMetadata Json?
+  active         Boolean           @default(true)
+  createdAt      DateTime          @default(now())
+  updatedAt      DateTime          @updatedAt
+
+  organization Organization? @relation(fields: [organizationId], references: [id], onDelete: SetNull)
+  signingKeys  SigningKeyRegistry[]
+  certificates OfficialCertificate[]
+
+  @@index([trustStatus, active])
+  @@schema("bovine_trust")
+}
+
+model SigningKeyRegistry {
+  id              String           @id @default(uuid())
+  issuerId        String
+  keyId           String           @unique
+  algorithm       String
+  publicKeyFingerprint String?
+  status          SigningKeyStatus @default(ACTIVE)
+  validFrom       DateTime?
+  validTo         DateTime?
+  revokedAt       DateTime?
+  revocationReason String?
+  metadata        Json?
+  createdAt       DateTime         @default(now())
+  updatedAt       DateTime         @updatedAt
+
+  issuer       CertificateIssuer @relation(fields: [issuerId], references: [id], onDelete: Cascade)
+  certificates OfficialCertificate[]
+
+  @@index([issuerId, status])
+  @@schema("bovine_trust")
+}
+
+model OfficialCertificate {
+  id                    String            @id @default(uuid())
+  publicId              String            @unique @default(uuid())
+  animalId              String
+  fileId                String
+  issuerId              String
+  signingKeyId          String?
+  issuedByUserId        String?
+  type                  CertificateType
+  status                CertificateStatus @default(DRAFT)
+  version               Int               @default(1)
+  templateVersion       String?
+  languageCode          String?
+  sha256Digest          String?
+  signatureAlgorithm    String?
+  signatureMetadata     Json?
+  signedAt              DateTime?
+  issuedAt              DateTime?
+  expiresAt             DateTime?
+  revokedAt             DateTime?
+  revocationReason      String?
+  supersedesCertificateId String?         @unique
+  publicVisibility      Boolean           @default(true)
+  createdAt             DateTime          @default(now())
+  updatedAt             DateTime          @updatedAt
+
+  animal      Animal @relation(fields: [animalId], references: [id], onDelete: Cascade)
+  file        FileAsset @relation(fields: [fileId], references: [id], onDelete: Restrict)
+  issuer      CertificateIssuer @relation(fields: [issuerId], references: [id], onDelete: Restrict)
+  signingKey  SigningKeyRegistry? @relation(fields: [signingKeyId], references: [id], onDelete: SetNull)
+  issuedBy    User? @relation(fields: [issuedByUserId], references: [id], onDelete: SetNull)
+  supersedes  OfficialCertificate? @relation("CertificateSupersession", fields: [supersedesCertificateId], references: [id], onDelete: SetNull)
+  supersededBy OfficialCertificate? @relation("CertificateSupersession")
+  ledgerEvents CertificateLedgerEvent[]
+  verifications CertificateVerificationAttempt[]
+  publicReferences PublicVerificationReference[]
+
+  @@unique([animalId, type, version])
+  @@index([animalId, type, status])
+  @@index([status, issuedAt])
+  @@schema("bovine_trust")
+}
+
+model CertificateLedgerEvent {
+  id             String                     @id @default(uuid())
+  certificateId  String
+  actorUserId    String?
+  type           CertificateLedgerEventType
+  occurredAt     DateTime                   @default(now())
+  sha256Digest   String?
+  signatureRef   String?
+  metadata       Json?
+
+  certificate OfficialCertificate @relation(fields: [certificateId], references: [id], onDelete: Cascade)
+  actor       User? @relation(fields: [actorUserId], references: [id], onDelete: SetNull)
+
+  @@index([certificateId, occurredAt])
+  @@schema("bovine_trust")
+}
+
+model CertificateVerificationAttempt {
+  id                   String                        @id @default(uuid())
+  certificateId        String?
+  verifierUserId       String?
+  retainedFileId       String?
+  source               CertificateVerificationSource
+  status               CertificateVerificationStatus
+  submittedFileName    String?
+  submittedSha256      String?
+  registrySha256       String?
+  digestMatch          Boolean?
+  signatureValid       Boolean?
+  issuerTrusted        Boolean?
+  publicReference      String?
+  errorCode            String?
+  metadata             Json?
+  verifiedAt           DateTime                      @default(now())
+
+  certificate OfficialCertificate? @relation(fields: [certificateId], references: [id], onDelete: SetNull)
+  verifier    User? @relation(fields: [verifierUserId], references: [id], onDelete: SetNull)
+  retainedFile FileAsset? @relation(fields: [retainedFileId], references: [id], onDelete: SetNull)
+
+  @@index([certificateId, verifiedAt])
+  @@index([status, verifiedAt])
+  @@index([source, verifiedAt])
+  @@schema("bovine_trust")
+}
+
+model PublicVerificationReference {
+  id            String   @id @default(uuid())
+  publicToken   String   @unique
+  animalId      String?
+  certificateId String?
+  active        Boolean  @default(true)
+  expiresAt     DateTime?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  animal      Animal? @relation(fields: [animalId], references: [id], onDelete: Cascade)
+  certificate OfficialCertificate? @relation(fields: [certificateId], references: [id], onDelete: Cascade)
+
+  @@index([animalId, active])
+  @@index([certificateId, active])
+  @@schema("bovine_trust")
+}

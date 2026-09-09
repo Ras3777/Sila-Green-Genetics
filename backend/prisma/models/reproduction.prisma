@@ -1,0 +1,266 @@
+// REPRODUCTION DOMAIN
+
+model BreedingCycle {
+  id             String   @id @default(uuid())
+  femaleAnimalId String
+  cycleStart     DateTime
+  cycleEnd       DateTime?
+  season         String?
+  status         String?
+  notes          String?
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  female         Animal          @relation("BreedingFemale", fields: [femaleAnimalId], references: [id], onDelete: Cascade)
+  breedingEvents BreedingEvent[]
+  pregnancyChecks PregnancyCheck[]
+  pregnancies    Pregnancy[]
+
+  recipientEvaluations RecipientEvaluation[]
+  @@index([femaleAnimalId, cycleStart])
+  @@schema("bovine_reproduction")
+}
+
+model BreedingEvent {
+  id               String            @id @default(uuid())
+  breedingCycleId  String?
+  femaleAnimalId   String
+  sireAnimalId     String?
+  semenBatchId     String?
+  embryoId         String?
+  eventType        BreedingEventType
+  eventAt          DateTime
+  technicianUserId String?
+  synchronizationProtocol String?
+  notes            String?
+  createdAt        DateTime          @default(now())
+
+  breedingCycle BreedingCycle? @relation(fields: [breedingCycleId], references: [id], onDelete: SetNull)
+  female        Animal         @relation("BreedingFemaleEvent", fields: [femaleAnimalId], references: [id], onDelete: Cascade)
+  sire          Animal?        @relation("BreedingSireEvent", fields: [sireAnimalId], references: [id], onDelete: SetNull)
+  semenBatch    SemenBatch?    @relation(fields: [semenBatchId], references: [id], onDelete: SetNull)
+  embryo        Embryo?        @relation(fields: [embryoId], references: [id], onDelete: SetNull)
+  pregnancyChecks PregnancyCheck[]
+  pregnancies   Pregnancy[]
+
+  @@index([femaleAnimalId, eventAt])
+  @@index([sireAnimalId])
+  @@schema("bovine_reproduction")
+}
+
+model PregnancyCheck {
+  id              String          @id @default(uuid())
+  breedingCycleId String?
+  breedingEventId String?
+  checkedAt       DateTime
+  result          PregnancyResult
+  gestationDaysEstimated Int?
+  fetusCount      Int?
+  method          String?
+  notes           String?
+  createdAt       DateTime        @default(now())
+
+  breedingCycle BreedingCycle? @relation(fields: [breedingCycleId], references: [id], onDelete: SetNull)
+  breedingEvent BreedingEvent? @relation(fields: [breedingEventId], references: [id], onDelete: SetNull)
+
+  @@index([breedingCycleId, checkedAt])
+  @@schema("bovine_reproduction")
+}
+
+model Pregnancy {
+  id              String          @id @default(uuid())
+  damId           String
+  breedingCycleId String?
+  breedingEventId String?
+  status          PregnancyStatus
+  conceptionDate  DateTime?
+  expectedCalvingDate DateTime?
+  confirmedAt     DateTime?
+  endedAt         DateTime?
+  notes           String?
+  createdAt       DateTime        @default(now())
+  updatedAt       DateTime        @updatedAt
+
+  dam           Animal         @relation("PregnancyDam", fields: [damId], references: [id], onDelete: Cascade)
+  breedingCycle BreedingCycle? @relation(fields: [breedingCycleId], references: [id], onDelete: SetNull)
+  breedingEvent BreedingEvent? @relation(fields: [breedingEventId], references: [id], onDelete: SetNull)
+  calvingEvent  CalvingEvent?
+
+  @@index([damId, status])
+  @@schema("bovine_reproduction")
+}
+
+model CalvingEvent {
+  id             String            @id @default(uuid())
+  damId          String
+  pregnancyId    String?           @unique
+  calvingAt      DateTime
+  ease           CalvingEase?
+  birthType      BirthType?
+  presentation   FetalPresentation?
+  placentaStatus String?
+  damCondition   String?
+  notes          String?
+  createdAt      DateTime          @default(now())
+
+  dam       Animal             @relation("CalvingDam", fields: [damId], references: [id], onDelete: Cascade)
+  pregnancy Pregnancy?         @relation(fields: [pregnancyId], references: [id], onDelete: SetNull)
+  offspring CalvingOffspring[]
+
+  @@index([damId, calvingAt])
+  @@schema("bovine_reproduction")
+}
+
+model CalvingOffspring {
+  id             String       @id @default(uuid())
+  calvingEventId String
+  animalId       String       @unique
+  birthOrder     Int?
+  birthOutcome   BirthOutcome
+  birthWeightKg  Decimal?     @db.Decimal(8, 3)
+  neonatalNotes  String?
+
+  calvingEvent CalvingEvent @relation(fields: [calvingEventId], references: [id], onDelete: Cascade)
+  animal       Animal       @relation(fields: [animalId], references: [id], onDelete: Cascade)
+  @@schema("bovine_reproduction")
+}
+
+model SemenCollection {
+  id                 String   @id @default(uuid())
+  sireId             String
+  collectionCenterId String?
+  collectionDate     DateTime
+  ejaculateNumber    String?
+  volumeMl           Decimal? @db.Decimal(10, 3)
+  concentrationMillionPerMl Decimal? @db.Decimal(12, 3)
+  motilityPercent    Decimal? @db.Decimal(5, 2)
+  morphologyNormalPercent Decimal? @db.Decimal(5, 2)
+  qualityGrade       String?
+  notes              String?
+  createdAt          DateTime @default(now())
+
+  sire             Animal        @relation("SemenSire", fields: [sireId], references: [id], onDelete: Cascade)
+  collectionCenter Organization? @relation("SemenCollectionCenter", fields: [collectionCenterId], references: [id], onDelete: SetNull)
+  batches          SemenBatch[]
+
+  @@index([sireId, collectionDate])
+  @@schema("bovine_reproduction")
+}
+
+model SemenBatch {
+  id                String           @id @default(uuid())
+  semenCollectionId String
+  batchCode         String           @unique
+  semenType         SemenType        @default(CONVENTIONAL)
+  freezeDate        DateTime?
+  expiryDate        DateTime?
+  initialDoseCount  Int
+  availableDoseCount Int
+  doseVolumeMl      Decimal?         @db.Decimal(8, 4)
+  spermPerDoseMillion Decimal?       @db.Decimal(12, 3)
+  storageLocation   String?
+  tankCode          String?
+  caneCode          String?
+  gobletCode        String?
+  status            SemenBatchStatus @default(AVAILABLE)
+  notes             String?
+  createdAt         DateTime         @default(now())
+  updatedAt         DateTime         @updatedAt
+
+  collection     SemenCollection @relation(fields: [semenCollectionId], references: [id], onDelete: Cascade)
+  breedingEvents BreedingEvent[]
+
+  marketplaceListings MarketplaceListing[]
+  @@index([semenCollectionId])
+  @@index([status, availableDoseCount])
+  @@schema("bovine_reproduction")
+}
+
+model Embryo {
+  id               String       @id @default(uuid())
+  embryoCode       String       @unique
+  donorDamId       String
+  sireId           String?
+  embryoCenterId   String?
+  geneticSampleId  String?
+  origin           EmbryoOrigin
+  collectionDate   DateTime?
+  fertilizationDate DateTime?
+  stage            String?
+  grade            String?
+  ietsCode         String?
+  sex              Sex?
+  state            EmbryoState  @default(FRESH)
+  freezingMethod   String?
+  storageLocation  String?
+  notes            String?
+  createdAt        DateTime     @default(now())
+  updatedAt        DateTime     @updatedAt
+
+  donorDam       Animal         @relation("EmbryoDonor", fields: [donorDamId], references: [id], onDelete: Cascade)
+  sire           Animal?        @relation("EmbryoSire", fields: [sireId], references: [id], onDelete: SetNull)
+  embryoCenter   Organization?  @relation("EmbryoCenter", fields: [embryoCenterId], references: [id], onDelete: SetNull)
+  geneticSample  GeneticSample? @relation(fields: [geneticSampleId], references: [id], onDelete: SetNull)
+  transfers      EmbryoTransfer[]
+  breedingEvents BreedingEvent[]
+
+  marketplaceListings MarketplaceListing[]
+  @@index([donorDamId])
+  @@index([sireId])
+  @@index([state])
+  @@schema("bovine_reproduction")
+}
+
+model EmbryoTransfer {
+  id                String   @id @default(uuid())
+  embryoId          String
+  recipientAnimalId String
+  transferredAt     DateTime
+  technicianUserId  String?
+  transferSite      String?
+  synchronizationDetails Json?
+  outcomeNotes      String?
+  createdAt         DateTime @default(now())
+
+  embryo    Embryo @relation(fields: [embryoId], references: [id], onDelete: Cascade)
+  recipient Animal @relation("EmbryoRecipient", fields: [recipientAnimalId], references: [id], onDelete: Cascade)
+
+  @@index([recipientAnimalId, transferredAt])
+  @@schema("bovine_reproduction")
+}
+
+model RecipientEvaluation {
+  id                     String         @id @default(uuid())
+  recipientAnimalId      String
+  breedingCycleId        String?
+  farmId                 String?
+  evaluatedAt            DateTime
+  evaluatorUserId        String?
+  bodyConditionScore     Decimal?       @db.Decimal(4, 2)
+  estrousCycleStatus     String?
+  synchronizationYear    Int?
+  synchronizationMonth   Int?
+  tickCount              Int?
+  headEvaluation         String?
+  bodyType               String?
+  colorEvaluation        String?
+  muscleDevelopment      String?
+  umbilicalCondition     String?
+  bodyStructure          String?
+  generalConformation    String?
+  earTagVerified         Boolean        @default(false)
+  status                 ApprovalStatus @default(PENDING)
+  notes                  String?
+  createdAt              DateTime       @default(now())
+  updatedAt              DateTime       @updatedAt
+
+  recipient     Animal @relation("RecipientEvaluationAnimal", fields: [recipientAnimalId], references: [id], onDelete: Cascade)
+  breedingCycle BreedingCycle? @relation(fields: [breedingCycleId], references: [id], onDelete: SetNull)
+  farm          Farm? @relation(fields: [farmId], references: [id], onDelete: SetNull)
+  evaluator     User? @relation("RecipientEvaluator", fields: [evaluatorUserId], references: [id], onDelete: SetNull)
+
+  @@index([recipientAnimalId, evaluatedAt])
+  @@index([farmId, evaluatedAt])
+  @@index([status])
+  @@schema("bovine_reproduction")
+}

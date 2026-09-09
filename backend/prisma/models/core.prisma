@@ -1,0 +1,703 @@
+// CORE DOMAIN
+
+model User {
+  id           String     @id @default(uuid())
+  firstName    String
+  lastName     String
+  email        String     @unique
+  passwordHash String
+  status       UserStatus @default(ACTIVE)
+  imageUrl     String?
+  verifiedAt   DateTime?
+  lastLoginAt  DateTime?
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime   @updatedAt
+
+  memberships         OrganizationMembership[]
+  notifications       Notification[]
+  auditEvents          AuditEvent[]             @relation("AuditActor")
+  recordedObservations PhenotypeObservation[]   @relation("ObservationRecorder")
+  collectedSamples     GeneticSample[]          @relation("SampleCollector")
+  verifiedParentages   Parentage[]              @relation("ParentageVerifier")
+  createdMatingPlans   MatingPlan[]             @relation("MatingPlanCreator")
+  approvedMatingPlans  MatingPlan[]             @relation("MatingPlanApprover")
+  administeredVaccines VaccinationEvent[]        @relation("VaccineAdministrator")
+  diagnosedConditions  Diagnosis[]              @relation("DiagnosisRecorder")
+  treatmentsGiven      Treatment[]              @relation("TreatmentRecorder")
+  recordedDailyLogs     DailyAnimalLog[]         @relation("DailyAnimalLogRecorder")
+  recordedAnimalObservations AnimalObservation[] @relation("AnimalObservationRecorder")
+  recordedOperationalEvents AnimalOperationalEvent[] @relation("AnimalOperationalEventRecorder")
+  assignedAnimalTasks   AnimalTask[]             @relation("AnimalTaskAssignee")
+  createdAnimalTasks    AnimalTask[]             @relation("AnimalTaskCreator")
+  completedAnimalTasks  AnimalTask[]             @relation("AnimalTaskCompleter")
+  recordedHerdDailyLogs HerdDailyLog[]           @relation("HerdDailyLogRecorder")
+  recordedFeedingLogs   GroupFeedingLog[]        @relation("GroupFeedingLogRecorder")
+  recordedEnvironmentLogs FarmEnvironmentLog[]   @relation("FarmEnvironmentLogRecorder")
+  recordedFarmEvents    FarmOperationalEvent[]   @relation("FarmOperationalEventRecorder")
+  recordedFarmDailyLogs FarmDailyLog[]            @relation("FarmDailyLogRecorder")
+  medicationAdministrations MedicationAdministration[] @relation("MedicationAdministrator")
+  preventiveCarePerformed PreventiveCareEvent[]    @relation("PreventiveCarePerformer")
+
+  capturedAnimalMedia AnimalMedia[] @relation("AnimalMediaCapturedBy")
+  mediaComments MediaComment[]
+  mediaVerifications MediaVerification[]
+  createdMediaAlbums MediaAlbum[]
+  requestedParentageCorrections ParentageCorrectionRequest[] @relation("ParentageCorrectionRequester")
+  reviewedParentageCorrections ParentageCorrectionRequest[] @relation("ParentageCorrectionReviewer")
+  createdPedigreeViews PedigreeSavedView[]
+  assignedDataQualityIssues DataQualityIssue[] @relation("DataQualityAssignee")
+  reportedDataQualityIssues DataQualityIssue[] @relation("DataQualityReporter")
+  recipientEvaluations RecipientEvaluation[] @relation("RecipientEvaluator")
+  createdMarketplaceListings MarketplaceListing[]
+  marketplaceInquiries MarketplaceInquiry[]
+  marketplaceOffers MarketplaceOffer[]
+  marketplaceReservations MarketplaceReservation[]
+  marketplaceOrders MarketplaceOrder[] @relation("MarketplaceBuyer")
+  marketplaceInspections MarketplaceInspection[]
+  savedMarketplaceListings MarketplaceSavedListing[]
+  savedMarketplaceSearches MarketplaceSavedSearch[]
+  governmentAssignments GovernmentOfficialAssignment[]
+  complianceAudits ComplianceAudit[]
+  governmentInspections GovernmentInspection[]
+  openedGovernmentInvestigations GovernmentInvestigation[]
+  createdInvestigationFindings InvestigationFinding[]
+  assignedInvestigationActions InvestigationAction[]
+  assignedGovernmentAlerts GovernmentAlert[]
+  createdGovernmentReports GovernmentReportTemplate[]
+  createdScheduledReports ScheduledReport[]
+  issuedQuarantineOrders QuarantineOrder[]
+  issuedCertificates OfficialCertificate[]
+  certificateLedgerEvents CertificateLedgerEvent[]
+  certificateVerifications CertificateVerificationAttempt[]
+  createdParentageEvidence ParentageEvidence[]
+  marketplaceListingViews MarketplaceListingView[]
+  qualifiedBreedingStockProfiles BreedingStockProfile[] @relation("BreedingStockQualifiedBy")
+  approvedBreedingStockProfiles  BreedingStockProfile[] @relation("BreedingStockApprovedBy")
+  breedingStockRoleAssignments   BreedingStockRoleAssignment[] @relation("BreedingStockRoleAssignedBy")
+  breedingStockStatusChanges     BreedingStockStatusHistory[] @relation("BreedingStockStatusChangedBy")
+  @@index([status])
+  @@schema("bovine_core")
+}
+
+model Organization {
+  id          String           @id @default(uuid())
+  code        String           @unique
+  name        String
+  type        OrganizationType
+  countryCode String?
+  region      String?
+  city        String?
+  address     String?
+  latitude    Decimal?         @db.Decimal(10, 7)
+  longitude   Decimal?         @db.Decimal(10, 7)
+  active      Boolean          @default(true)
+  createdAt   DateTime         @default(now())
+  updatedAt   DateTime         @updatedAt
+
+  memberships       OrganizationMembership[]
+  farms             Farm[]
+  ownedAnimals      Animal[]                  @relation("CurrentOwner")
+  ownershipHistory  AnimalOwnership[]
+  breedingPrograms  BreedingProgram[]
+  laboratories      Laboratory[]
+  auditEvents       AuditEvent[]
+  notifications     Notification[]
+  semenCenters      SemenCollection[]         @relation("SemenCollectionCenter")
+  embryoCenters     Embryo[]                  @relation("EmbryoCenter")
+  transportMovements AnimalMovement[] @relation("MovementTransporter")
+  marketplaceListings MarketplaceListing[] @relation("MarketplaceSellerOrganization")
+  marketplaceOrdersSold MarketplaceOrder[] @relation("MarketplaceSeller")
+  governmentOffices GovernmentOffice[]
+  responsibleCorrectiveActions CorrectiveAction[]
+  certificateIssuers CertificateIssuer[]
+  @@schema("bovine_core")
+}
+
+model OrganizationMembership {
+  id             String      @id @default(uuid())
+  userId         String
+  organizationId String
+  role           SystemRole
+  active         Boolean     @default(true)
+  createdAt      DateTime    @default(now())
+  updatedAt      DateTime    @updatedAt
+
+  user         User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, organizationId, role])
+  @@index([organizationId, role])
+  @@schema("bovine_core")
+}
+
+model Farm {
+  id             String   @id @default(uuid())
+  organizationId String
+  code           String
+  name           String
+  farmType       FarmType
+  countryCode    String?
+  region         String?
+  district       String?
+  city           String?
+  address        String?
+  latitude       Decimal? @db.Decimal(10, 7)
+  longitude      Decimal? @db.Decimal(10, 7)
+  elevationM     Decimal? @db.Decimal(10, 2)
+  active         Boolean  @default(true)
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  organization        Organization           @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  herds               Herd[]
+  animals             Animal[]               @relation("CurrentFarm")
+  movementsFrom       AnimalMovement[]       @relation("MovementFromFarm")
+  movementsTo         AnimalMovement[]       @relation("MovementToFarm")
+  observations        PhenotypeObservation[]
+  contemporaryGroups  ContemporaryGroup[]
+  healthEvents        HealthEvent[]
+  dailyAnimalLogs     DailyAnimalLog[]
+  animalObservations  AnimalObservation[]
+  herdDailyLogs       HerdDailyLog[]
+  feedingLogs         GroupFeedingLog[]
+  environmentLogs     FarmEnvironmentLog[]
+  operationalEvents   FarmOperationalEvent[]
+  sensorDevices       SensorDevice[]
+  productionPeriods   ProductionPeriod[]
+  farmDailyLogs        FarmDailyLog[]
+  preventiveCareEvents PreventiveCareEvent[]
+
+  animalMedia AnimalMedia[]
+  dietaryRegimes DietaryRegime[]
+  dataQualityIssues DataQualityIssue[]
+  diseaseIncidents DiseaseIncident[]
+  quarantineOrders QuarantineOrder[]
+  complianceAudits ComplianceAudit[]
+  complianceFindings ComplianceFinding[]
+  governmentInspections GovernmentInspection[]
+  governmentAlerts GovernmentAlert[]
+  recipientEvaluations RecipientEvaluation[]
+  governmentJurisdictionId String?
+  governmentJurisdiction GovernmentJurisdiction? @relation(fields: [governmentJurisdictionId], references: [id], onDelete: SetNull)
+  @@unique([organizationId, code])
+  @@index([organizationId])
+  @@index([region, district])
+  @@schema("bovine_core")
+}
+
+model Herd {
+  id        String   @id @default(uuid())
+  farmId    String
+  code      String
+  name      String
+  purpose   String?
+  active    Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  farm                Farm                 @relation(fields: [farmId], references: [id], onDelete: Cascade)
+  animals             Animal[]             @relation("CurrentHerd")
+  managementGroups    ManagementGroup[]
+  contemporaryGroups  ContemporaryGroup[]
+  dailyAnimalLogs     DailyAnimalLog[]
+  animalObservations  AnimalObservation[]
+  dailyLogs           HerdDailyLog[]
+  feedingLogs         GroupFeedingLog[]
+  productionPeriods   ProductionPeriod[]
+
+  animalMedia AnimalMedia[]
+  @@unique([farmId, code])
+  @@schema("bovine_core")
+}
+
+model ManagementGroup {
+  id          String   @id @default(uuid())
+  herdId      String
+  code        String
+  name        String
+  description String?
+  startDate   DateTime?
+  endDate     DateTime?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  herd               Herd                  @relation(fields: [herdId], references: [id], onDelete: Cascade)
+  contemporaryGroups ContemporaryGroup[]
+  dailyAnimalLogs    DailyAnimalLog[]
+  animalObservations AnimalObservation[]
+  feedingLogs        GroupFeedingLog[]
+
+  @@unique([herdId, code])
+  @@schema("bovine_core")
+}
+
+model Breed {
+  id             String   @id @default(uuid())
+  code           String   @unique
+  name           String   @unique
+  scientificName String?
+  countryOfOrigin String?
+  description    String?
+  active         Boolean  @default(true)
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  compositions      AnimalBreedComposition[]
+  evaluationRuns    GeneticEvaluationRun[]
+  programBreeds     BreedingProgramBreed[]
+  @@schema("bovine_core")
+}
+
+model Animal {
+  id                         String          @id @default(uuid())
+  primaryName                String?
+  sex                        Sex
+  birthDate                  DateTime?
+  deathDate                  DateTime?
+  lifeStatus                 AnimalLifeStatus @default(ALIVE)
+  managementStatus          AnimalManagementStatus @default(ACTIVE)
+  birthOutcome               BirthOutcome?
+  birthType                  BirthType?
+  coatColor                  String?
+  hornStatus                 String?
+  registrationStatus         ApprovalStatus   @default(PENDING)
+  currentOwnerOrganizationId String?
+  currentFarmId              String?
+  currentHerdId              String?
+  notes                      String?
+  createdAt                  DateTime         @default(now())
+  updatedAt                  DateTime         @updatedAt
+
+  currentOwner           Organization?            @relation("CurrentOwner", fields: [currentOwnerOrganizationId], references: [id], onDelete: SetNull)
+  currentFarm            Farm?                    @relation("CurrentFarm", fields: [currentFarmId], references: [id], onDelete: SetNull)
+  currentHerd            Herd?                    @relation("CurrentHerd", fields: [currentHerdId], references: [id], onDelete: SetNull)
+  identifiers            AnimalIdentifier[]
+  breedComposition       AnimalBreedComposition[]
+  parentageAsOffspring   Parentage[]               @relation("OffspringParentage")
+  parentageAsParent      Parentage[]               @relation("ParentParentage")
+  ownershipHistory       AnimalOwnership[]
+  movements              AnimalMovement[]
+  media                  AnimalMedia[]
+  phenotypeObservations  PhenotypeObservation[]
+  performanceEnrollments PerformanceTestEnrollment[]
+  geneticSamples         GeneticSample[]
+  markerResults          AnimalMarkerResult[]
+  conditionResults       AnimalGeneticConditionResult[]
+  geneticEstimates       GeneticTraitEstimate[]
+  selectionIndexResults  AnimalSelectionIndexResult[]
+  geneticMetrics         AnimalGeneticMetric[]
+  breedingCycles         BreedingCycle[]            @relation("BreedingFemale")
+  breedingEventsAsFemale BreedingEvent[]             @relation("BreedingFemaleEvent")
+  breedingEventsAsSire   BreedingEvent[]             @relation("BreedingSireEvent")
+  pregnancies            Pregnancy[]                @relation("PregnancyDam")
+  calvingsAsDam          CalvingEvent[]              @relation("CalvingDam")
+  calvingOffspring       CalvingOffspring[]
+  semenCollections       SemenCollection[]           @relation("SemenSire")
+  embryosAsDonor         Embryo[]                    @relation("EmbryoDonor")
+  embryosAsSire          Embryo[]                    @relation("EmbryoSire")
+  embryoTransfersAsRecipient EmbryoTransfer[]         @relation("EmbryoRecipient")
+  healthEvents           HealthEvent[]
+  vaccinations           VaccinationEvent[]
+  diagnoses              Diagnosis[]
+  treatments             Treatment[]
+  matingRecommendationsAsFemale MatingRecommendation[] @relation("MatingFemale")
+  matingRecommendationsAsMale   MatingRecommendation[] @relation("MatingMale")
+  dailyLogs              DailyAnimalLog[]
+  operationalObservations AnimalObservation[]
+  operationalEvents      AnimalOperationalEvent[]
+  operationalTasks       AnimalTask[]
+  deviceAssignments      AnimalDeviceAssignment[]
+  dailySensorSummaries   DailySensorSummary[]
+  productionPeriods      ProductionPeriod[]
+  productionRecords      AnimalProductionRecord[]
+  medicationAdministrations MedicationAdministration[]
+  preventiveCareEvents      PreventiveCareEvent[]
+  breedingStockProfile      BreedingStockProfile?
+
+  publicId String @unique @default(uuid())
+  externalParentageCorrections ParentageCorrectionRequest[] @relation("CorrectionOffspring")
+  proposedAsCorrectedParent ParentageCorrectionRequest[] @relation("CorrectionProposedParent")
+  pedigreeSavedViews PedigreeSavedView[]
+  dataQualityIssues DataQualityIssue[]
+  mediaAlbums MediaAlbum[]
+  recipientEvaluations RecipientEvaluation[] @relation("RecipientEvaluationAnimal")
+  marketplaceListings MarketplaceListing[]
+  marketplaceOrders MarketplaceOrder[] @relation("MarketplaceAnimal")
+  quarantineMemberships QuarantineAnimal[]
+  diseaseIncidentLinks DiseaseIncidentAnimal[]
+  governmentAlerts GovernmentAlert[]
+  officialCertificates OfficialCertificate[]
+  publicVerificationReferences PublicVerificationReference[]
+  @@index([currentOwnerOrganizationId])
+  @@index([currentFarmId])
+  @@index([currentHerdId])
+  @@index([sex])
+  @@index([lifeStatus])
+  @@index([managementStatus])
+  @@index([birthDate])
+  @@schema("bovine_core")
+}
+
+
+model BreedingStockProfile {
+  id                  String              @id @default(uuid())
+  animalId            String              @unique
+  status              BreedingStockStatus @default(CANDIDATE)
+  candidateAt         DateTime            @default(now())
+  underEvaluationAt   DateTime?
+  qualifiedAt         DateTime?
+  qualifiedByUserId   String?
+  approvedAt          DateTime?
+  approvedByUserId    String?
+  suspendedAt         DateTime?
+  retiredAt           DateTime?
+  qualificationNotes  String?
+  qualificationSnapshot Json?
+  createdAt           DateTime            @default(now())
+  updatedAt           DateTime            @updatedAt
+
+  animal       Animal @relation(fields: [animalId], references: [id], onDelete: Cascade)
+  qualifiedBy  User?  @relation("BreedingStockQualifiedBy", fields: [qualifiedByUserId], references: [id], onDelete: SetNull)
+  approvedBy   User?  @relation("BreedingStockApprovedBy", fields: [approvedByUserId], references: [id], onDelete: SetNull)
+  roles        BreedingStockRoleAssignment[]
+  statusHistory BreedingStockStatusHistory[]
+
+  @@index([status])
+  @@index([qualifiedAt])
+  @@index([approvedAt])
+  @@schema("bovine_core")
+}
+
+model BreedingStockRoleAssignment {
+  id                     String            @id @default(uuid())
+  breedingStockProfileId String
+  role                   BreedingStockRole
+  validFrom              DateTime          @default(now())
+  validTo                DateTime?
+  assignedByUserId       String?
+  assignmentReason       String?
+  notes                  String?
+  createdAt              DateTime          @default(now())
+  updatedAt              DateTime          @updatedAt
+
+  breedingStockProfile BreedingStockProfile @relation(fields: [breedingStockProfileId], references: [id], onDelete: Cascade)
+  assignedBy           User?                @relation("BreedingStockRoleAssignedBy", fields: [assignedByUserId], references: [id], onDelete: SetNull)
+
+  @@index([breedingStockProfileId, role])
+  @@index([role, validTo])
+  @@index([validFrom, validTo])
+  @@schema("bovine_core")
+}
+
+model BreedingStockStatusHistory {
+  id                     String              @id @default(uuid())
+  breedingStockProfileId String
+  fromStatus             BreedingStockStatus?
+  toStatus               BreedingStockStatus
+  changedAt              DateTime            @default(now())
+  changedByUserId        String?
+  reason                 String?
+  evidence               Json?
+
+  breedingStockProfile BreedingStockProfile @relation(fields: [breedingStockProfileId], references: [id], onDelete: Cascade)
+  changedBy            User?                @relation("BreedingStockStatusChangedBy", fields: [changedByUserId], references: [id], onDelete: SetNull)
+
+  @@index([breedingStockProfileId, changedAt])
+  @@index([toStatus, changedAt])
+  @@schema("bovine_core")
+}
+
+model AnimalIdentifier {
+  id         String         @id @default(uuid())
+  animalId   String
+  type       IdentifierType
+  value      String
+  issuer     String?
+  countryCode String?
+  isPrimary  Boolean        @default(false)
+  issuedAt   DateTime?
+  retiredAt  DateTime?
+  createdAt  DateTime       @default(now())
+
+  animal Animal @relation(fields: [animalId], references: [id], onDelete: Cascade)
+
+  @@unique([type, value, issuer])
+  @@index([animalId, isPrimary])
+  @@index([value])
+  @@schema("bovine_core")
+}
+
+model AnimalBreedComposition {
+  id         String            @id @default(uuid())
+  animalId   String
+  breedId    String
+  proportion Decimal           @db.Decimal(7, 6)
+  source     CompositionSource
+  confidence Decimal?          @db.Decimal(5, 4)
+  recordedAt DateTime          @default(now())
+
+  animal Animal @relation(fields: [animalId], references: [id], onDelete: Cascade)
+  breed  Breed  @relation(fields: [breedId], references: [id])
+
+  @@unique([animalId, breedId])
+  @@index([breedId])
+  @@schema("bovine_core")
+}
+
+model Parentage {
+  id                 String                       @id @default(uuid())
+  offspringId        String
+  parentId           String?
+  parentType         ParentType
+  source             ParentageSource
+  status             ParentageStatus              @default(RECORDED)
+  confidence         Decimal?                     @db.Decimal(5, 4)
+  verificationMethod ParentageVerificationMethod?
+  verifiedAt         DateTime?
+  verifiedById       String?
+  genomicAssayId     String?
+  notes              String?
+  createdAt          DateTime                     @default(now())
+  updatedAt          DateTime                     @updatedAt
+
+  offspring   Animal           @relation("OffspringParentage", fields: [offspringId], references: [id], onDelete: Cascade)
+  parent      Animal?          @relation("ParentParentage", fields: [parentId], references: [id], onDelete: SetNull)
+  verifiedBy  User?            @relation("ParentageVerifier", fields: [verifiedById], references: [id], onDelete: SetNull)
+  genomicAssay GenotypingAssay? @relation(fields: [genomicAssayId], references: [id], onDelete: SetNull)
+
+  externalParentId String?
+  sourceReference String?
+  isCurrent Boolean @default(true)
+  validFrom DateTime @default(now())
+  validTo DateTime?
+  externalParent ExternalAncestor? @relation("ExternalParentage", fields: [externalParentId], references: [id], onDelete: SetNull)
+  evidence ParentageEvidence[]
+  correctionRequests ParentageCorrectionRequest[]
+  @@unique([offspringId, parentType, status])
+  @@index([parentId])
+  @@index([status])
+  @@schema("bovine_core")
+}
+
+model AnimalOwnership {
+  id             String        @id @default(uuid())
+  animalId       String
+  organizationId String
+  ownershipType  OwnershipType @default(OWNED)
+  sharePercent   Decimal?      @db.Decimal(5, 2)
+  startDate      DateTime
+  endDate        DateTime?
+  notes          String?
+  createdAt      DateTime      @default(now())
+
+  animal       Animal       @relation(fields: [animalId], references: [id], onDelete: Cascade)
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  @@index([animalId, startDate])
+  @@index([organizationId, endDate])
+  @@schema("bovine_core")
+}
+
+model AnimalMovement {
+  id         String       @id @default(uuid())
+  animalId   String
+  movementType MovementType
+  fromFarmId String?
+  toFarmId   String?
+  movedAt    DateTime
+  reason     String?
+  reference  String?
+  createdAt  DateTime     @default(now())
+
+  animal   Animal @relation(fields: [animalId], references: [id], onDelete: Cascade)
+  fromFarm Farm?  @relation("MovementFromFarm", fields: [fromFarmId], references: [id], onDelete: SetNull)
+  toFarm   Farm?  @relation("MovementToFarm", fields: [toFarmId], references: [id], onDelete: SetNull)
+
+  status MovementStatus @default(COMPLETED)
+  clearanceStatus MovementClearanceStatus @default(NOT_REQUIRED)
+  plannedAt DateTime?
+  arrivedAt DateTime?
+  arrivalConfirmedAt DateTime?
+  transporterOrganizationId String?
+  movementDocumentFileId String?
+  quarantineExceptionReason String?
+  metadata Json?
+  transporterOrganization Organization? @relation("MovementTransporter", fields: [transporterOrganizationId], references: [id], onDelete: SetNull)
+  movementDocument FileAsset? @relation("MovementDocument", fields: [movementDocumentFileId], references: [id], onDelete: SetNull)
+  @@index([animalId, movedAt])
+  @@index([fromFarmId])
+  @@index([toFarmId])
+  @@schema("bovine_core")
+}
+
+model AuditEvent {
+  id             String      @id @default(uuid())
+  organizationId String?
+  actorId        String?
+  action         AuditAction
+  entityType     String
+  entityId       String
+  fieldName      String?
+  oldValue       Json?
+  newValue       Json?
+  reason         String?
+  source         String?
+  correlationId  String?
+  occurredAt     DateTime    @default(now())
+
+  organization Organization? @relation(fields: [organizationId], references: [id], onDelete: SetNull)
+  actor        User?         @relation("AuditActor", fields: [actorId], references: [id], onDelete: SetNull)
+
+  @@index([entityType, entityId, occurredAt])
+  @@index([actorId, occurredAt])
+  @@index([correlationId])
+  @@schema("bovine_core")
+}
+
+model Notification {
+  id             String           @id @default(uuid())
+  recipientId    String
+  organizationId String?
+  type           NotificationType
+  title          String
+  message        String
+  entityType     String?
+  entityId       String?
+  metadata       Json?
+  readAt         DateTime?
+  archivedAt     DateTime?
+  expiresAt      DateTime?
+  createdAt      DateTime         @default(now())
+
+  recipient    User          @relation(fields: [recipientId], references: [id], onDelete: Cascade)
+  organization Organization? @relation(fields: [organizationId], references: [id], onDelete: SetNull)
+
+  @@index([recipientId, readAt, createdAt])
+  @@index([type, createdAt])
+  @@schema("bovine_core")
+}
+
+model ExternalAncestor {
+  id              String   @id @default(uuid())
+  externalId      String?
+  name            String?
+  registryNumber  String?
+  breedText       String?
+  sex             Sex      @default(UNKNOWN)
+  birthDate       DateTime?
+  sourceRegistry  String?
+  countryCode     String?
+  sourceReference String?
+  metadata        Json?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  parentageRecords Parentage[] @relation("ExternalParentage")
+  proposedCorrections ParentageCorrectionRequest[] @relation("CorrectionProposedExternal")
+
+  @@index([registryNumber])
+  @@index([externalId])
+  @@schema("bovine_core")
+}
+
+model ParentageEvidence {
+  id           String                @id @default(uuid())
+  parentageId  String
+  fileId       String?
+  type         ParentageEvidenceType
+  title        String?
+  source       String?
+  reference    String?
+  confidence   Decimal?              @db.Decimal(7, 6)
+  createdById  String?
+  createdAt    DateTime              @default(now())
+  metadata     Json?
+
+  parentage Parentage @relation(fields: [parentageId], references: [id], onDelete: Cascade)
+  file      FileAsset? @relation(fields: [fileId], references: [id], onDelete: SetNull)
+  createdBy User? @relation(fields: [createdById], references: [id], onDelete: SetNull)
+
+  @@index([parentageId, type])
+  @@schema("bovine_core")
+}
+
+model ParentageCorrectionRequest {
+  id                        String                    @id @default(uuid())
+  offspringId               String
+  parentType                ParentType
+  currentParentageId        String?
+  proposedParentAnimalId    String?
+  proposedExternalAncestorId String?
+  reason                    String
+  status                    ParentageCorrectionStatus @default(DRAFT)
+  requestedById             String
+  reviewedById              String?
+  reviewedAt                DateTime?
+  reviewNotes               String?
+  evidence                  Json?
+  createdAt                 DateTime                  @default(now())
+  updatedAt                 DateTime                  @updatedAt
+
+  offspring Animal @relation("CorrectionOffspring", fields: [offspringId], references: [id], onDelete: Cascade)
+  currentParentage Parentage? @relation(fields: [currentParentageId], references: [id], onDelete: SetNull)
+  proposedParent Animal? @relation("CorrectionProposedParent", fields: [proposedParentAnimalId], references: [id], onDelete: SetNull)
+  proposedExternalAncestor ExternalAncestor? @relation("CorrectionProposedExternal", fields: [proposedExternalAncestorId], references: [id], onDelete: SetNull)
+  requestedBy User @relation("ParentageCorrectionRequester", fields: [requestedById], references: [id])
+  reviewedBy User? @relation("ParentageCorrectionReviewer", fields: [reviewedById], references: [id], onDelete: SetNull)
+
+  @@index([offspringId, status])
+  @@index([requestedById, status])
+  @@schema("bovine_core")
+}
+
+model PedigreeSavedView {
+  id          String   @id @default(uuid())
+  rootAnimalId String
+  ownerUserId String
+  name        String
+  description String?
+  state       Json
+  sharedScope String?  // PERSONAL, OFFICE, ORGANIZATION, etc. application controlled
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  rootAnimal Animal @relation(fields: [rootAnimalId], references: [id], onDelete: Cascade)
+  owner      User   @relation(fields: [ownerUserId], references: [id], onDelete: Cascade)
+
+  @@index([ownerUserId, updatedAt])
+  @@index([rootAnimalId])
+  @@schema("bovine_core")
+}
+
+model DataQualityIssue {
+  id             String              @id @default(uuid())
+  entityType     String
+  entityId       String
+  category       String
+  code           String
+  severity       DataQualitySeverity @default(WARNING)
+  status         DataQualityStatus   @default(OPEN)
+  title          String
+  description    String?
+  animalId       String?
+  farmId         String?
+  assignedToId   String?
+  reportedById   String?
+  detectedAt     DateTime            @default(now())
+  dueAt          DateTime?
+  resolvedAt     DateTime?
+  resolutionNote String?
+  metadata       Json?
+  createdAt      DateTime            @default(now())
+  updatedAt      DateTime            @updatedAt
+
+  animal      Animal? @relation(fields: [animalId], references: [id], onDelete: SetNull)
+  farm        Farm?   @relation(fields: [farmId], references: [id], onDelete: SetNull)
+  assignedTo  User?   @relation("DataQualityAssignee", fields: [assignedToId], references: [id], onDelete: SetNull)
+  reportedBy  User?   @relation("DataQualityReporter", fields: [reportedById], references: [id], onDelete: SetNull)
+
+  @@index([entityType, entityId, status])
+  @@index([severity, status, detectedAt])
+  @@index([farmId, status])
+  @@schema("bovine_core")
+}

@@ -1,0 +1,283 @@
+// MARKETPLACE DOMAIN
+
+model MarketplaceListing {
+  id                   String                   @id @default(uuid())
+  publicId             String                   @unique @default(uuid())
+  sellerOrganizationId String
+  createdById          String
+  assetType            MarketplaceAssetType
+  animalId             String?
+  semenBatchId         String?
+  embryoId             String?
+  listingType          MarketplaceListingType  @default(NEGOTIABLE)
+  status               MarketplaceListingStatus @default(DRAFT)
+  title                String
+  description          String?
+  currency             String                   @default("ETB")
+  askingPrice          Decimal?                 @db.Decimal(18, 2)
+  minimumPrice         Decimal?                 @db.Decimal(18, 2)
+  priceNegotiable      Boolean                  @default(true)
+  quantity             Int?
+  availableFrom        DateTime?
+  expiresAt            DateTime?
+  locationVisibility   String?                  @default("REGION")
+  contactVisibility    String?                  @default("AFTER_INQUIRY")
+  pickupDeliveryTerms  Json?
+  verificationSnapshot Json?
+  viewCount            Int                      @default(0)
+  saveCount            Int                      @default(0)
+  inquiryCount         Int                      @default(0)
+  offerCount           Int                      @default(0)
+  publishedAt          DateTime?
+  pausedAt             DateTime?
+  soldAt               DateTime?
+  createdAt            DateTime                 @default(now())
+  updatedAt            DateTime                 @updatedAt
+
+  sellerOrganization Organization @relation("MarketplaceSellerOrganization", fields: [sellerOrganizationId], references: [id], onDelete: Cascade)
+  createdBy          User         @relation(fields: [createdById], references: [id], onDelete: Restrict)
+  animal             Animal?      @relation(fields: [animalId], references: [id], onDelete: SetNull)
+  semenBatch         SemenBatch?  @relation(fields: [semenBatchId], references: [id], onDelete: SetNull)
+  embryo             Embryo?      @relation(fields: [embryoId], references: [id], onDelete: SetNull)
+  media              MarketplaceListingMedia[]
+  documents          MarketplaceListingDocument[]
+  inquiries          MarketplaceInquiry[]
+  offers             MarketplaceOffer[]
+  reservations       MarketplaceReservation[]
+  orders             MarketplaceOrder[]
+  savedBy            MarketplaceSavedListing[]
+  views              MarketplaceListingView[]
+
+  @@index([assetType, status, publishedAt])
+  @@index([sellerOrganizationId, status])
+  @@index([animalId])
+  @@index([semenBatchId])
+  @@index([embryoId])
+  @@schema("bovine_marketplace")
+}
+
+model MarketplaceListingMedia {
+  id            String   @id @default(uuid())
+  listingId     String
+  animalMediaId String
+  displayOrder  Int      @default(0)
+  isPrimary     Boolean  @default(false)
+  approvedAt    DateTime?
+  createdAt     DateTime @default(now())
+
+  listing MarketplaceListing @relation(fields: [listingId], references: [id], onDelete: Cascade)
+  media   AnimalMedia        @relation(fields: [animalMediaId], references: [id], onDelete: Cascade)
+
+  @@unique([listingId, animalMediaId])
+  @@index([listingId, displayOrder])
+  @@schema("bovine_marketplace")
+}
+
+model MarketplaceListingDocument {
+  id         String                        @id @default(uuid())
+  listingId  String
+  fileId     String
+  title      String?
+  visibility MarketplaceDocumentVisibility @default(PRIVATE)
+  createdAt  DateTime                      @default(now())
+
+  listing MarketplaceListing @relation(fields: [listingId], references: [id], onDelete: Cascade)
+  file    FileAsset          @relation(fields: [fileId], references: [id], onDelete: Cascade)
+
+  @@unique([listingId, fileId])
+  @@schema("bovine_marketplace")
+}
+
+model MarketplaceInquiry {
+  id          String                   @id @default(uuid())
+  listingId   String
+  buyerUserId String
+  type        MarketplaceInquiryType   @default(GENERAL)
+  status      MarketplaceInquiryStatus @default(OPEN)
+  message     String
+  sellerReply String?
+  repliedAt   DateTime?
+  closedAt    DateTime?
+  createdAt   DateTime                 @default(now())
+  updatedAt   DateTime                 @updatedAt
+
+  listing MarketplaceListing @relation(fields: [listingId], references: [id], onDelete: Cascade)
+  buyer   User               @relation(fields: [buyerUserId], references: [id], onDelete: Cascade)
+
+  @@index([listingId, status, createdAt])
+  @@index([buyerUserId, status])
+  @@schema("bovine_marketplace")
+}
+
+model MarketplaceOffer {
+  id            String                 @id @default(uuid())
+  listingId     String
+  buyerUserId   String
+  parentOfferId String?
+  amount        Decimal                @db.Decimal(18, 2)
+  currency      String                 @default("ETB")
+  status        MarketplaceOfferStatus @default(PENDING)
+  message       String?
+  expiresAt     DateTime?
+  respondedAt   DateTime?
+  createdAt     DateTime               @default(now())
+  updatedAt     DateTime               @updatedAt
+
+  listing      MarketplaceListing @relation(fields: [listingId], references: [id], onDelete: Cascade)
+  buyer        User               @relation(fields: [buyerUserId], references: [id], onDelete: Cascade)
+  parentOffer  MarketplaceOffer?  @relation("OfferCounterChain", fields: [parentOfferId], references: [id], onDelete: SetNull)
+  counterOffers MarketplaceOffer[] @relation("OfferCounterChain")
+  reservations MarketplaceReservation[]
+  orders       MarketplaceOrder[]
+
+  @@index([listingId, status, createdAt])
+  @@index([buyerUserId, status])
+  @@schema("bovine_marketplace")
+}
+
+model MarketplaceReservation {
+  id              String                       @id @default(uuid())
+  listingId       String
+  buyerUserId     String
+  offerId         String?
+  status          MarketplaceReservationStatus @default(ACTIVE)
+  reservedAt      DateTime                     @default(now())
+  expiresAt       DateTime
+  depositStatus   MarketplaceDepositStatus     @default(NOT_REQUIRED)
+  depositAmount   Decimal?                     @db.Decimal(18, 2)
+  inspectionRequired Boolean                    @default(false)
+  conditions      Json?
+  notes           String?
+  createdAt       DateTime                     @default(now())
+  updatedAt       DateTime                     @updatedAt
+
+  listing MarketplaceListing @relation(fields: [listingId], references: [id], onDelete: Cascade)
+  buyer   User               @relation(fields: [buyerUserId], references: [id], onDelete: Cascade)
+  offer   MarketplaceOffer?  @relation(fields: [offerId], references: [id], onDelete: SetNull)
+  orders  MarketplaceOrder[]
+
+  @@index([listingId, status, expiresAt])
+  @@index([buyerUserId, status])
+  @@schema("bovine_marketplace")
+}
+
+model MarketplaceOrder {
+  id                   String                    @id @default(uuid())
+  publicId             String                    @unique @default(uuid())
+  listingId            String
+  buyerUserId          String
+  sellerOrganizationId String
+  animalId             String?
+  acceptedOfferId      String?
+  reservationId        String?
+  amount               Decimal                   @db.Decimal(18, 2)
+  currency             String                    @default("ETB")
+  status               MarketplaceOrderStatus    @default(OFFER_ACCEPTED)
+  paymentStatus        MarketplacePaymentStatus  @default(PENDING)
+  transferStatus       MarketplaceTransferStatus @default(NOT_REQUIRED)
+  deliveryStatus       MarketplaceDeliveryStatus @default(NOT_REQUIRED)
+  externalPaymentRef   String?
+  ownershipTransferAt  DateTime?
+  completedAt          DateTime?
+  cancelledAt          DateTime?
+  cancellationReason   String?
+  createdAt            DateTime                  @default(now())
+  updatedAt            DateTime                  @updatedAt
+
+  listing MarketplaceListing @relation(fields: [listingId], references: [id], onDelete: Restrict)
+  buyer   User               @relation("MarketplaceBuyer", fields: [buyerUserId], references: [id], onDelete: Restrict)
+  seller  Organization       @relation("MarketplaceSeller", fields: [sellerOrganizationId], references: [id], onDelete: Restrict)
+  animal  Animal?            @relation("MarketplaceAnimal", fields: [animalId], references: [id], onDelete: SetNull)
+  acceptedOffer MarketplaceOffer? @relation(fields: [acceptedOfferId], references: [id], onDelete: SetNull)
+  reservation MarketplaceReservation? @relation(fields: [reservationId], references: [id], onDelete: SetNull)
+  inspections MarketplaceInspection[]
+
+  @@index([buyerUserId, status, createdAt])
+  @@index([sellerOrganizationId, status, createdAt])
+  @@index([listingId])
+  @@schema("bovine_marketplace")
+}
+
+model MarketplaceInspection {
+  id              String                      @id @default(uuid())
+  orderId         String
+  inspectorUserId String?
+  type            MarketplaceInspectionType
+  status          MarketplaceInspectionStatus @default(REQUESTED)
+  requestedAt     DateTime                    @default(now())
+  scheduledAt     DateTime?
+  completedAt     DateTime?
+  location        String?
+  resultSummary   String?
+  findings        Json?
+  buyerAcknowledgedAt DateTime?
+  sellerAcknowledgedAt DateTime?
+  notes           String?
+
+  order      MarketplaceOrder @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  inspector  User?            @relation(fields: [inspectorUserId], references: [id], onDelete: SetNull)
+  files      MarketplaceInspectionFile[]
+
+  @@index([orderId, status])
+  @@index([scheduledAt])
+  @@schema("bovine_marketplace")
+}
+
+model MarketplaceInspectionFile {
+  inspectionId String
+  fileId       String
+  title        String?
+  createdAt    DateTime @default(now())
+
+  inspection MarketplaceInspection @relation(fields: [inspectionId], references: [id], onDelete: Cascade)
+  file       FileAsset             @relation(fields: [fileId], references: [id], onDelete: Cascade)
+
+  @@id([inspectionId, fileId])
+  @@schema("bovine_marketplace")
+}
+
+model MarketplaceSavedListing {
+  userId    String
+  listingId String
+  note      String?
+  folder    String?
+  createdAt DateTime @default(now())
+
+  user    User               @relation(fields: [userId], references: [id], onDelete: Cascade)
+  listing MarketplaceListing @relation(fields: [listingId], references: [id], onDelete: Cascade)
+
+  @@id([userId, listingId])
+  @@index([listingId])
+  @@schema("bovine_marketplace")
+}
+
+model MarketplaceSavedSearch {
+  id            String   @id @default(uuid())
+  userId        String
+  name          String
+  filters       Json
+  notificationsEnabled Boolean @default(false)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, updatedAt])
+  @@schema("bovine_marketplace")
+}
+
+model MarketplaceListingView {
+  id           String   @id @default(uuid())
+  listingId    String
+  viewerUserId String?
+  sessionHash  String?
+  source       String?
+  viewedAt     DateTime @default(now())
+
+  listing MarketplaceListing @relation(fields: [listingId], references: [id], onDelete: Cascade)
+
+  viewer User? @relation(fields: [viewerUserId], references: [id], onDelete: SetNull)
+  @@index([listingId, viewedAt])
+  @@index([viewerUserId, viewedAt])
+  @@schema("bovine_marketplace")
+}

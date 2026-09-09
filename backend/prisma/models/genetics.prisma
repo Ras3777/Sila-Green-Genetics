@@ -1,0 +1,541 @@
+// GENETICS DOMAIN
+
+model TraitDefinition {
+  id          String             @id @default(uuid())
+  code        String             @unique
+  name        String
+  description String?
+  category    TraitCategory
+  unit        String?
+  direction   SelectionDirection @default(CONTEXT_DEPENDENT)
+  sexLimited  Boolean            @default(false)
+  active      Boolean            @default(true)
+  metadata    Json?
+  createdAt   DateTime           @default(now())
+  updatedAt   DateTime           @updatedAt
+
+  observations          PhenotypeObservation[]
+  geneticEstimates      GeneticTraitEstimate[]
+  indexComponents       SelectionIndexComponent[]
+  @@schema("bovine_genetics")
+}
+
+model MeasurementMethod {
+  id          String   @id @default(uuid())
+  code        String   @unique
+  name        String
+  description String?
+  protocolVersion String?
+  metadata    Json?
+  active      Boolean  @default(true)
+
+  observations PhenotypeObservation[]
+  @@schema("bovine_genetics")
+}
+
+model ContemporaryGroup {
+  id                String   @id @default(uuid())
+  code              String
+  farmId            String?
+  herdId            String?
+  managementGroupId String?
+  sexGroup          Sex?
+  birthSeason       String?
+  feedingGroup      String?
+  managementSystem  String?
+  startDate         DateTime?
+  endDate           DateTime?
+  notes             String?
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  farm            Farm?            @relation(fields: [farmId], references: [id], onDelete: SetNull)
+  herd            Herd?            @relation(fields: [herdId], references: [id], onDelete: SetNull)
+  managementGroup ManagementGroup? @relation(fields: [managementGroupId], references: [id], onDelete: SetNull)
+  observations    PhenotypeObservation[]
+  testEnrollments PerformanceTestEnrollment[]
+
+  @@index([farmId])
+  @@index([herdId])
+  @@schema("bovine_genetics")
+}
+
+model PhenotypeObservation {
+  id                  String                   @id @default(uuid())
+  animalId            String
+  traitId             String
+  observedAt          DateTime
+  stage               MeasurementStage?
+  rawValue            Decimal                  @db.Decimal(18, 6)
+  adjustedValue       Decimal?                 @db.Decimal(18, 6)
+  unit                String?
+  animalAgeDays       Int?
+  measurementMethodId String?
+  contemporaryGroupId String?
+  farmId              String?
+  recordedById        String?
+  qualityStatus       ObservationQualityStatus @default(RAW)
+  qualityFlags        Json?
+  notes               String?
+  createdAt           DateTime                 @default(now())
+  updatedAt           DateTime                 @updatedAt
+
+  animal            Animal             @relation(fields: [animalId], references: [id], onDelete: Cascade)
+  trait             TraitDefinition    @relation(fields: [traitId], references: [id])
+  measurementMethod MeasurementMethod? @relation(fields: [measurementMethodId], references: [id], onDelete: SetNull)
+  contemporaryGroup ContemporaryGroup? @relation(fields: [contemporaryGroupId], references: [id], onDelete: SetNull)
+  farm              Farm?              @relation(fields: [farmId], references: [id], onDelete: SetNull)
+  recordedBy        User?              @relation("ObservationRecorder", fields: [recordedById], references: [id], onDelete: SetNull)
+
+  dietaryRegimeId String?
+  dietaryRegime DietaryRegime? @relation(fields: [dietaryRegimeId], references: [id], onDelete: SetNull)
+  @@index([animalId, observedAt])
+  @@index([traitId, observedAt])
+  @@index([contemporaryGroupId])
+  @@index([qualityStatus])
+  @@schema("bovine_genetics")
+}
+
+model PerformanceTest {
+  id          String   @id @default(uuid())
+  code        String   @unique
+  name        String
+  description String?
+  stationName String?
+  startDate   DateTime
+  endDate     DateTime?
+  protocol    Json?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  enrollments PerformanceTestEnrollment[]
+  @@schema("bovine_genetics")
+}
+
+model PerformanceTestEnrollment {
+  id                  String   @id @default(uuid())
+  performanceTestId   String
+  animalId            String
+  contemporaryGroupId String?
+  enrolledAt          DateTime @default(now())
+  completedAt         DateTime?
+  status              String?
+  summary              Json?
+
+  performanceTest   PerformanceTest   @relation(fields: [performanceTestId], references: [id], onDelete: Cascade)
+  animal            Animal            @relation(fields: [animalId], references: [id], onDelete: Cascade)
+  contemporaryGroup ContemporaryGroup? @relation(fields: [contemporaryGroupId], references: [id], onDelete: SetNull)
+
+  @@unique([performanceTestId, animalId])
+  @@schema("bovine_genetics")
+}
+
+model Laboratory {
+  id             String   @id @default(uuid())
+  organizationId String?
+  code           String   @unique
+  name           String
+  countryCode    String?
+  accreditation  String?
+  active         Boolean  @default(true)
+  createdAt      DateTime @default(now())
+
+  organization Organization?    @relation(fields: [organizationId], references: [id], onDelete: SetNull)
+  samples      GeneticSample[]
+  assays       GenotypingAssay[]
+  @@schema("bovine_genetics")
+}
+
+model GeneticSample {
+  id            String            @id @default(uuid())
+  animalId      String
+  sampleCode    String            @unique
+  sampleType    GeneticSampleType
+  collectedAt   DateTime
+  collectedById String?
+  laboratoryId  String?
+  receivedAt    DateTime?
+  status        SampleStatus      @default(COLLECTED)
+  chainOfCustody Json?
+  notes         String?
+  createdAt     DateTime          @default(now())
+  updatedAt     DateTime          @updatedAt
+
+  animal      Animal      @relation(fields: [animalId], references: [id], onDelete: Cascade)
+  collectedBy User?       @relation("SampleCollector", fields: [collectedById], references: [id], onDelete: SetNull)
+  laboratory  Laboratory? @relation(fields: [laboratoryId], references: [id], onDelete: SetNull)
+  assays      GenotypingAssay[]
+  embryos     Embryo[]
+
+  @@index([animalId])
+  @@index([laboratoryId, status])
+  @@schema("bovine_genetics")
+}
+
+model GenotypingAssay {
+  id                  String           @id @default(uuid())
+  sampleId            String
+  laboratoryId        String?
+  assayName           String
+  platform            String?
+  chipName            String?
+  chipVersion         String?
+  genomeAssembly      String?
+  markerCount         Int?
+  calledMarkerCount   Int?
+  callRate            Decimal?         @db.Decimal(7, 6)
+  heterozygosity      Decimal?         @db.Decimal(7, 6)
+  performedAt         DateTime?
+  qcStatus            GenotypeQcStatus @default(PENDING)
+  rawDataFileId       String?
+  processedDataFileId String?
+  software            String?
+  softwareVersion     String?
+  metadata            Json?
+  createdAt           DateTime         @default(now())
+  updatedAt           DateTime         @updatedAt
+
+  sample            GeneticSample   @relation(fields: [sampleId], references: [id], onDelete: Cascade)
+  laboratory        Laboratory?     @relation(fields: [laboratoryId], references: [id], onDelete: SetNull)
+  rawDataFile       FileAsset?      @relation("RawGenotypeFile", fields: [rawDataFileId], references: [id], onDelete: SetNull)
+  processedDataFile FileAsset?      @relation("ProcessedGenotypeFile", fields: [processedDataFileId], references: [id], onDelete: SetNull)
+  qcResults         GenotypeQcResult[]
+  parentageLinks    Parentage[]
+  markerResults     AnimalMarkerResult[]
+  conditionResults  AnimalGeneticConditionResult[]
+
+  @@index([sampleId])
+  @@index([qcStatus])
+  @@schema("bovine_genetics")
+}
+
+model GenotypeQcResult {
+  id          String           @id @default(uuid())
+  assayId     String
+  checkCode   String
+  status      GenotypeQcStatus
+  value       Decimal?         @db.Decimal(18, 6)
+  threshold   Decimal?         @db.Decimal(18, 6)
+  message     String?
+  createdAt   DateTime         @default(now())
+
+  assay GenotypingAssay @relation(fields: [assayId], references: [id], onDelete: Cascade)
+
+  @@index([assayId, status])
+  @@schema("bovine_genetics")
+}
+
+model GeneticMarker {
+  id          String   @id @default(uuid())
+  code        String   @unique
+  name        String
+  chromosome  String?
+  positionBp  BigInt?
+  referenceAllele String?
+  alternateAllele String?
+  genomeAssembly String?
+  description String?
+  active      Boolean  @default(true)
+
+  results AnimalMarkerResult[]
+  @@schema("bovine_genetics")
+}
+
+model AnimalMarkerResult {
+  id        String             @id @default(uuid())
+  animalId  String
+  markerId  String
+  assayId   String?
+  genotype  String?
+  result    MarkerResultStatus?
+  value     String?
+  testedAt  DateTime?
+  createdAt DateTime           @default(now())
+
+  animal Animal          @relation(fields: [animalId], references: [id], onDelete: Cascade)
+  marker GeneticMarker   @relation(fields: [markerId], references: [id])
+  assay  GenotypingAssay? @relation(fields: [assayId], references: [id], onDelete: SetNull)
+
+  @@unique([animalId, markerId, assayId])
+  @@index([markerId])
+  @@schema("bovine_genetics")
+}
+
+model GeneticCondition {
+  id          String   @id @default(uuid())
+  code        String   @unique
+  name        String
+  description String?
+  inheritance String?
+  affectedBreeds Json?
+  active      Boolean  @default(true)
+
+  results AnimalGeneticConditionResult[]
+  @@schema("bovine_genetics")
+}
+
+model AnimalGeneticConditionResult {
+  id            String                 @id @default(uuid())
+  animalId      String
+  conditionId   String
+  assayId       String?
+  status        GeneticConditionStatus
+  genotype      String?
+  testedAt      DateTime?
+  certificateFileId String?
+  notes         String?
+  createdAt     DateTime               @default(now())
+
+  animal      Animal           @relation(fields: [animalId], references: [id], onDelete: Cascade)
+  condition   GeneticCondition @relation(fields: [conditionId], references: [id])
+  assay       GenotypingAssay? @relation(fields: [assayId], references: [id], onDelete: SetNull)
+  certificate FileAsset?       @relation(fields: [certificateFileId], references: [id], onDelete: SetNull)
+
+  @@unique([animalId, conditionId, assayId])
+  @@index([conditionId, status])
+  @@schema("bovine_genetics")
+}
+
+model BreedingProgram {
+  id             String                @id @default(uuid())
+  organizationId String
+  code           String
+  name           String
+  description    String?
+  objectiveType  BreedingObjectiveType
+  status         BreedingProgramStatus @default(PLANNING)
+  startDate      DateTime?
+  endDate        DateTime?
+  metadata       Json?
+  createdAt      DateTime              @default(now())
+  updatedAt      DateTime              @updatedAt
+
+  organization     Organization          @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  breeds           BreedingProgramBreed[]
+  populations      BreedingPopulation[]
+  evaluationRuns   GeneticEvaluationRun[]
+  selectionIndexes SelectionIndex[]
+  matingPlans      MatingPlan[]
+
+  governmentAssignments GovernmentOfficialAssignment[]
+  governmentProgramLinks GovernmentProgramBreedingProgram[]
+  @@unique([organizationId, code])
+  @@schema("bovine_genetics")
+}
+
+model BreedingProgramBreed {
+  id                String @id @default(uuid())
+  breedingProgramId String
+  breedId           String
+  targetProportion  Decimal? @db.Decimal(7, 6)
+
+  breedingProgram BreedingProgram @relation(fields: [breedingProgramId], references: [id], onDelete: Cascade)
+  breed           Breed           @relation(fields: [breedId], references: [id])
+
+  @@unique([breedingProgramId, breedId])
+  @@schema("bovine_genetics")
+}
+
+model BreedingPopulation {
+  id                String   @id @default(uuid())
+  breedingProgramId String
+  code              String
+  name              String
+  countryCode       String?
+  description       String?
+  active            Boolean  @default(true)
+  createdAt         DateTime @default(now())
+
+  breedingProgram BreedingProgram       @relation(fields: [breedingProgramId], references: [id], onDelete: Cascade)
+  evaluationRuns  GeneticEvaluationRun[]
+
+  @@unique([breedingProgramId, code])
+  @@schema("bovine_genetics")
+}
+
+model GeneticEvaluationRun {
+  id                String                  @id @default(uuid())
+  breedingProgramId String?
+  populationId      String?
+  breedId           String?
+  name              String
+  evaluationDate    DateTime
+  methodology       GeneticEvaluationMethod
+  software          String?
+  softwareVersion   String?
+  geneticBase       String?
+  baseDate          DateTime?
+  countryCode       String?
+  status            EvaluationRunStatus     @default(DRAFT)
+  validationSummary Json?
+  publishedAt       DateTime?
+  createdAt         DateTime                @default(now())
+  updatedAt         DateTime                @updatedAt
+
+  breedingProgram BreedingProgram?  @relation(fields: [breedingProgramId], references: [id], onDelete: SetNull)
+  population      BreedingPopulation? @relation(fields: [populationId], references: [id], onDelete: SetNull)
+  breed           Breed?             @relation(fields: [breedId], references: [id], onDelete: SetNull)
+  estimates       GeneticTraitEstimate[]
+  metrics         AnimalGeneticMetric[]
+
+  @@index([evaluationDate, status])
+  @@index([breedId])
+  @@schema("bovine_genetics")
+}
+
+model GeneticTraitEstimate {
+  id          String       @id @default(uuid())
+  animalId    String
+  runId       String
+  traitId     String
+  estimateType EstimateType
+  value       Decimal      @db.Decimal(18, 6)
+  accuracy    Decimal?     @db.Decimal(7, 6)
+  reliability Decimal?     @db.Decimal(7, 6)
+  standardError Decimal?   @db.Decimal(18, 6)
+  percentile  Decimal?     @db.Decimal(7, 3)
+  rank        Int?
+  decile      Int?
+  dataSources Json?
+  createdAt   DateTime     @default(now())
+
+  animal Animal               @relation(fields: [animalId], references: [id], onDelete: Cascade)
+  run    GeneticEvaluationRun @relation(fields: [runId], references: [id], onDelete: Cascade)
+  trait  TraitDefinition      @relation(fields: [traitId], references: [id])
+
+  @@unique([animalId, runId, traitId, estimateType])
+  @@index([runId, traitId])
+  @@index([animalId, traitId])
+  @@schema("bovine_genetics")
+}
+
+model AnimalGeneticMetric {
+  id        String   @id @default(uuid())
+  animalId  String
+  runId     String?
+  code      String
+  value     Decimal  @db.Decimal(18, 8)
+  method    String?
+  metadata  Json?
+  createdAt DateTime @default(now())
+
+  animal Animal                @relation(fields: [animalId], references: [id], onDelete: Cascade)
+  run    GeneticEvaluationRun? @relation(fields: [runId], references: [id], onDelete: SetNull)
+
+  @@index([animalId, code])
+  @@index([runId, code])
+  @@schema("bovine_genetics")
+}
+
+model SelectionIndex {
+  id                String   @id @default(uuid())
+  breedingProgramId String
+  code              String
+  name              String
+  description       String?
+  active            Boolean  @default(true)
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  breedingProgram BreedingProgram       @relation(fields: [breedingProgramId], references: [id], onDelete: Cascade)
+  versions        SelectionIndexVersion[]
+
+  @@unique([breedingProgramId, code])
+  @@schema("bovine_genetics")
+}
+
+model SelectionIndexVersion {
+  id               String   @id @default(uuid())
+  selectionIndexId String
+  version          String
+  effectiveFrom    DateTime
+  effectiveTo      DateTime?
+  formulaNotes     String?
+  createdAt        DateTime @default(now())
+
+  selectionIndex SelectionIndex             @relation(fields: [selectionIndexId], references: [id], onDelete: Cascade)
+  components     SelectionIndexComponent[]
+  results        AnimalSelectionIndexResult[]
+
+  @@unique([selectionIndexId, version])
+  @@schema("bovine_genetics")
+}
+
+model SelectionIndexComponent {
+  id                      String   @id @default(uuid())
+  selectionIndexVersionId String
+  traitId                 String
+  weight                  Decimal  @db.Decimal(18, 8)
+  economicValue           Decimal? @db.Decimal(18, 8)
+  notes                   String?
+
+  selectionIndexVersion SelectionIndexVersion @relation(fields: [selectionIndexVersionId], references: [id], onDelete: Cascade)
+  trait                 TraitDefinition       @relation(fields: [traitId], references: [id])
+
+  @@unique([selectionIndexVersionId, traitId])
+  @@schema("bovine_genetics")
+}
+
+model AnimalSelectionIndexResult {
+  id                      String   @id @default(uuid())
+  animalId                String
+  selectionIndexVersionId String
+  value                   Decimal  @db.Decimal(18, 6)
+  percentile              Decimal? @db.Decimal(7, 3)
+  rank                    Int?
+  calculatedAt            DateTime @default(now())
+
+  animal                Animal                @relation(fields: [animalId], references: [id], onDelete: Cascade)
+  selectionIndexVersion SelectionIndexVersion @relation(fields: [selectionIndexVersionId], references: [id], onDelete: Cascade)
+
+  @@unique([animalId, selectionIndexVersionId])
+  @@schema("bovine_genetics")
+}
+
+model MatingPlan {
+  id                String           @id @default(uuid())
+  breedingProgramId String?
+  name              String
+  breedingSeason    String?
+  status            MatingPlanStatus @default(DRAFT)
+  objective         Json?
+  constraints       Json?
+  createdById       String
+  approvedById      String?
+  approvedAt        DateTime?
+  createdAt         DateTime         @default(now())
+  updatedAt         DateTime         @updatedAt
+
+  breedingProgram BreedingProgram?      @relation(fields: [breedingProgramId], references: [id], onDelete: SetNull)
+  createdBy       User                  @relation("MatingPlanCreator", fields: [createdById], references: [id])
+  approvedBy      User?                 @relation("MatingPlanApprover", fields: [approvedById], references: [id], onDelete: SetNull)
+  recommendations MatingRecommendation[]
+
+  @@index([status])
+  @@schema("bovine_genetics")
+}
+
+model MatingRecommendation {
+  id                      String                     @id @default(uuid())
+  matingPlanId            String
+  femaleAnimalId          String
+  maleAnimalId            String
+  status                  MatingRecommendationStatus @default(PROPOSED)
+  score                   Decimal?                   @db.Decimal(18, 6)
+  expectedInbreeding      Decimal?                   @db.Decimal(7, 6)
+  expectedBreedComposition Json?
+  expectedTraits          Json?
+  geneticConditionRisk    Json?
+  reasons                 Json?
+  selectedAt              DateTime?
+  createdAt               DateTime                   @default(now())
+
+  matingPlan MatingPlan @relation(fields: [matingPlanId], references: [id], onDelete: Cascade)
+  female     Animal     @relation("MatingFemale", fields: [femaleAnimalId], references: [id], onDelete: Cascade)
+  male       Animal     @relation("MatingMale", fields: [maleAnimalId], references: [id], onDelete: Cascade)
+
+  @@unique([matingPlanId, femaleAnimalId, maleAnimalId])
+  @@index([femaleAnimalId])
+  @@index([maleAnimalId])
+  @@schema("bovine_genetics")
+}

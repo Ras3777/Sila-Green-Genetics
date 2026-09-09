@@ -1,0 +1,471 @@
+// OPS DOMAIN
+
+model DailyAnimalLog {
+  id                   String                  @id @default(uuid())
+  animalId             String
+  farmId               String?
+  herdId               String?
+  managementGroupId    String?
+  logDate              DateTime                @db.Date
+  operationalStatus    AnimalOperationalStatus @default(NORMAL)
+  overallConditionScore Decimal?               @db.Decimal(4, 2)
+  bodyTemperatureC     Decimal?                @db.Decimal(5, 2)
+  bodyWeightKg         Decimal?                @db.Decimal(10, 3)
+  bodyConditionScore   Decimal?                @db.Decimal(4, 2)
+  appetiteScore        Int?
+  activityScore        Int?
+  hydrationScore       Int?
+  manureScore          Int?
+  lamenessScore        Int?
+  ruminationMinutes    Int?
+  lyingMinutes         Int?
+  standingMinutes      Int?
+  walkingSteps         Int?
+  feedIntakeKg         Decimal?                @db.Decimal(10, 3)
+  waterIntakeL         Decimal?                @db.Decimal(10, 3)
+  heartRateBpm         Int?
+  respirationRatePerMin Int?
+  abnormal             Boolean                 @default(false)
+  requiresReview       Boolean                 @default(false)
+  reviewReason         String?
+  notes                String?
+  recordedById         String?
+  createdAt            DateTime                @default(now())
+  updatedAt            DateTime                @updatedAt
+
+  animal          Animal           @relation(fields: [animalId], references: [id], onDelete: Cascade)
+  farm            Farm?            @relation(fields: [farmId], references: [id], onDelete: SetNull)
+  herd            Herd?            @relation(fields: [herdId], references: [id], onDelete: SetNull)
+  managementGroup ManagementGroup? @relation(fields: [managementGroupId], references: [id], onDelete: SetNull)
+  recordedBy      User?            @relation("DailyAnimalLogRecorder", fields: [recordedById], references: [id], onDelete: SetNull)
+
+  @@unique([animalId, logDate])
+  @@index([farmId, logDate])
+  @@index([herdId, logDate])
+  @@index([managementGroupId, logDate])
+  @@index([operationalStatus, logDate])
+  @@index([abnormal, requiresReview, logDate])
+  @@schema("bovine_ops")
+}
+
+model AnimalObservation {
+  id                String                   @id @default(uuid())
+  animalId          String
+  farmId            String?
+  herdId            String?
+  managementGroupId String?
+  type              AnimalObservationType
+  observedAt        DateTime
+  numericValue      Decimal?                 @db.Decimal(18, 6)
+  textValue         String?
+  booleanValue      Boolean?
+  scoreValue        Int?
+  unit              String?
+  source            ObservationSource        @default(MANUAL)
+  severity          ObservationSeverity      @default(NORMAL)
+  abnormal          Boolean                  @default(false)
+  requiresReview    Boolean                  @default(false)
+  recordedById      String?
+  notes             String?
+  createdAt         DateTime                 @default(now())
+
+  animal          Animal           @relation(fields: [animalId], references: [id], onDelete: Cascade)
+  farm            Farm?            @relation(fields: [farmId], references: [id], onDelete: SetNull)
+  herd            Herd?            @relation(fields: [herdId], references: [id], onDelete: SetNull)
+  managementGroup ManagementGroup? @relation(fields: [managementGroupId], references: [id], onDelete: SetNull)
+  recordedBy      User?            @relation("AnimalObservationRecorder", fields: [recordedById], references: [id], onDelete: SetNull)
+
+  @@index([animalId, observedAt])
+  @@index([type, observedAt])
+  @@index([farmId, observedAt])
+  @@index([abnormal, requiresReview, observedAt])
+  @@schema("bovine_ops")
+}
+
+model AnimalOperationalEvent {
+  id             String                     @id @default(uuid())
+  animalId       String
+  type           AnimalOperationalEventType
+  occurredAt     DateTime
+  severity       ObservationSeverity        @default(INFO)
+  title          String
+  description    String?
+  source         ObservationSource          @default(MANUAL)
+  referenceType  String?
+  referenceId    String?
+  recordedById   String?
+  metadata       Json?
+  createdAt      DateTime                   @default(now())
+
+  animal     Animal @relation(fields: [animalId], references: [id], onDelete: Cascade)
+  recordedBy User?  @relation("AnimalOperationalEventRecorder", fields: [recordedById], references: [id], onDelete: SetNull)
+
+  @@index([animalId, occurredAt])
+  @@index([type, occurredAt])
+  @@index([referenceType, referenceId])
+  @@schema("bovine_ops")
+}
+
+model AnimalTask {
+  id            String         @id @default(uuid())
+  animalId      String
+  type          AnimalTaskType
+  status        TaskStatus     @default(OPEN)
+  title         String
+  description   String?
+  dueAt         DateTime?
+  priority      Int?           // application convention, e.g. 1 highest to 5 lowest
+  assignedToId  String?
+  createdById   String?
+  completedById String?
+  completedAt   DateTime?
+  recurrenceRule String?       // optional RFC 5545 RRULE managed by application layer
+  sourceType    String?
+  sourceId      String?
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
+
+  animal      Animal @relation(fields: [animalId], references: [id], onDelete: Cascade)
+  assignedTo  User?  @relation("AnimalTaskAssignee", fields: [assignedToId], references: [id], onDelete: SetNull)
+  createdBy   User?  @relation("AnimalTaskCreator", fields: [createdById], references: [id], onDelete: SetNull)
+  completedBy User?  @relation("AnimalTaskCompleter", fields: [completedById], references: [id], onDelete: SetNull)
+
+  @@index([animalId, status, dueAt])
+  @@index([assignedToId, status, dueAt])
+  @@schema("bovine_ops")
+}
+
+model SensorDevice {
+  id             String           @id @default(uuid())
+  farmId         String?
+  serialNumber   String           @unique
+  type           SensorDeviceType
+  manufacturer   String?
+  model          String?
+  firmwareVersion String?
+  active         Boolean          @default(true)
+  installedAt    DateTime?
+  lastSeenAt     DateTime?
+  metadata       Json?
+  createdAt      DateTime         @default(now())
+  updatedAt      DateTime         @updatedAt
+
+  farm        Farm?                    @relation(fields: [farmId], references: [id], onDelete: SetNull)
+  assignments AnimalDeviceAssignment[]
+  readings    SensorReading[]
+
+  @@index([farmId, active])
+  @@index([lastSeenAt])
+  @@schema("bovine_ops")
+}
+
+model AnimalDeviceAssignment {
+  id         String   @id @default(uuid())
+  animalId   String
+  deviceId   String
+  assignedAt DateTime
+  removedAt  DateTime?
+  placement  String?
+  notes      String?
+
+  animal Animal       @relation(fields: [animalId], references: [id], onDelete: Cascade)
+  device SensorDevice @relation(fields: [deviceId], references: [id], onDelete: Cascade)
+
+  @@index([animalId, assignedAt])
+  @@index([deviceId, removedAt])
+  @@schema("bovine_ops")
+}
+
+model SensorReading {
+  id           String               @id @default(uuid())
+  deviceId     String
+  animalId     String?
+  metricType   SensorMetricType
+  recordedAt   DateTime
+  value        Decimal              @db.Decimal(20, 8)
+  unit         String?
+  quality      SensorReadingQuality @default(RAW)
+  metadata     Json?
+  createdAt    DateTime             @default(now())
+
+  device SensorDevice @relation(fields: [deviceId], references: [id], onDelete: Cascade)
+
+  @@index([deviceId, recordedAt])
+  @@index([animalId, metricType, recordedAt])
+  @@index([quality, recordedAt])
+  @@schema("bovine_ops")
+}
+
+model DailySensorSummary {
+  id          String           @id @default(uuid())
+  animalId    String
+  logDate     DateTime         @db.Date
+  metricType  SensorMetricType
+  sampleCount Int
+  minValue    Decimal?         @db.Decimal(20, 8)
+  maxValue    Decimal?         @db.Decimal(20, 8)
+  avgValue    Decimal?         @db.Decimal(20, 8)
+  sumValue    Decimal?         @db.Decimal(20, 8)
+  lastValue   Decimal?         @db.Decimal(20, 8)
+  unit        String?
+  abnormal    Boolean          @default(false)
+  calculatedAt DateTime        @default(now())
+
+  animal Animal @relation(fields: [animalId], references: [id], onDelete: Cascade)
+
+  @@unique([animalId, logDate, metricType])
+  @@index([logDate, metricType])
+  @@index([abnormal, logDate])
+  @@schema("bovine_ops")
+}
+
+model ProductionPeriod {
+  id           String               @id @default(uuid())
+  animalId     String
+  farmId       String?
+  herdId       String?
+  type         ProductionPeriodType
+  sequence     Int?
+  startedAt    DateTime
+  endedAt      DateTime?
+  status       String?
+  startReason  String?
+  endReason    String?
+  notes        String?
+  createdAt    DateTime             @default(now())
+  updatedAt    DateTime             @updatedAt
+
+  animal  Animal                   @relation(fields: [animalId], references: [id], onDelete: Cascade)
+  farm    Farm?                    @relation(fields: [farmId], references: [id], onDelete: SetNull)
+  herd    Herd?                    @relation(fields: [herdId], references: [id], onDelete: SetNull)
+  records AnimalProductionRecord[]
+
+  @@index([animalId, type, startedAt])
+  @@index([farmId, type, startedAt])
+  @@schema("bovine_ops")
+}
+
+model AnimalProductionRecord {
+  id                 String               @id @default(uuid())
+  animalId           String
+  productionPeriodId String?
+  type               ProductionRecordType
+  recordedAt         DateTime
+  value              Decimal              @db.Decimal(18, 6)
+  unit               String
+  session            String?              // e.g. morning/afternoon/evening, test session, shift
+  source             ObservationSource    @default(MANUAL)
+  qualityStatus      ObservationQualityStatus @default(RAW)
+  notes              String?
+  metadata           Json?
+  createdAt          DateTime             @default(now())
+
+  animal           Animal            @relation(fields: [animalId], references: [id], onDelete: Cascade)
+  productionPeriod ProductionPeriod? @relation(fields: [productionPeriodId], references: [id], onDelete: SetNull)
+
+  @@index([animalId, type, recordedAt])
+  @@index([productionPeriodId, recordedAt])
+  @@schema("bovine_ops")
+}
+
+model FarmDailyLog {
+  id                        String   @id @default(uuid())
+  farmId                    String
+  logDate                   DateTime @db.Date
+  totalHeadCount            Int?
+  presentCount              Int?
+  sickCount                 Int?
+  underTreatmentCount       Int?
+  quarantineCount           Int?
+  criticalAlertCount        Int?
+  birthsCount               Int?
+  deathsCount               Int?
+  weanedCount               Int?
+  movedInCount              Int?
+  movedOutCount             Int?
+  heatDetectedCount         Int?
+  breedingPerformedCount    Int?
+  pregnancyChecksCount      Int?
+  pregnanciesConfirmedCount Int?
+  calvingsCount             Int?
+  feedOfferedKg             Decimal? @db.Decimal(14, 3)
+  feedRefusedKg             Decimal? @db.Decimal(14, 3)
+  estimatedFeedConsumedKg   Decimal? @db.Decimal(14, 3)
+  waterConsumedL            Decimal? @db.Decimal(14, 3)
+  openHealthCases           Int?
+  overdueTaskCount          Int?
+  unresolvedIssueCount      Int?
+  productionSummary         Json?
+  healthSummary             Json?
+  reproductionSummary       Json?
+  feedSummary               Json?
+  welfareSummary            Json?
+  operationsSummary         Json?
+  notes                     String?
+  recordedById              String?
+  createdAt                 DateTime @default(now())
+  updatedAt                 DateTime @updatedAt
+
+  farm       Farm  @relation(fields: [farmId], references: [id], onDelete: Cascade)
+  recordedBy User? @relation("FarmDailyLogRecorder", fields: [recordedById], references: [id], onDelete: SetNull)
+
+  @@unique([farmId, logDate])
+  @@index([logDate])
+  @@schema("bovine_ops")
+}
+
+model HerdDailyLog {
+  id                       String   @id @default(uuid())
+  farmId                   String
+  herdId                   String
+  logDate                  DateTime @db.Date
+  headCount                Int?
+  presentCount             Int?
+  sickCount                Int?
+  underTreatmentCount      Int?
+  quarantineCount          Int?
+  birthsCount              Int?
+  deathsCount              Int?
+  weanedCount              Int?
+  movedInCount             Int?
+  movedOutCount            Int?
+  heatDetectedCount        Int?
+  breedingPerformedCount   Int?
+  pregnancyChecksCount     Int?
+  pregnanciesConfirmedCount Int?
+  calvingsCount            Int?
+  feedOfferedKg            Decimal? @db.Decimal(14, 3)
+  feedRefusedKg            Decimal? @db.Decimal(14, 3)
+  estimatedFeedConsumedKg  Decimal? @db.Decimal(14, 3)
+  waterConsumedL           Decimal? @db.Decimal(14, 3)
+  productionSummary        Json?
+  healthSummary            Json?
+  reproductionSummary      Json?
+  welfareSummary           Json?
+  unresolvedIssues         Int?     @default(0)
+  notes                    String?
+  recordedById             String?
+  createdAt                DateTime @default(now())
+  updatedAt                DateTime @updatedAt
+
+  farm       Farm @relation(fields: [farmId], references: [id], onDelete: Cascade)
+  herd       Herd @relation(fields: [herdId], references: [id], onDelete: Cascade)
+  recordedBy User? @relation("HerdDailyLogRecorder", fields: [recordedById], references: [id], onDelete: SetNull)
+
+  @@unique([herdId, logDate])
+  @@index([farmId, logDate])
+  @@schema("bovine_ops")
+}
+
+model GroupFeedingLog {
+  id                 String   @id @default(uuid())
+  farmId             String
+  herdId             String?
+  managementGroupId  String?
+  recordedAt         DateTime
+  rationName         String?
+  rationVersion      String?
+  feedBatchReference String?
+  animalsFedCount    Int?
+  feedOfferedKg      Decimal? @db.Decimal(14, 3)
+  feedRefusedKg      Decimal? @db.Decimal(14, 3)
+  estimatedConsumedKg Decimal? @db.Decimal(14, 3)
+  dryMatterPercent   Decimal? @db.Decimal(5, 2)
+  dryMatterConsumedKg Decimal? @db.Decimal(14, 3)
+  concentrateKg      Decimal? @db.Decimal(14, 3)
+  forageKg           Decimal? @db.Decimal(14, 3)
+  supplementKg       Decimal? @db.Decimal(14, 3)
+  mineralKg          Decimal? @db.Decimal(14, 3)
+  feedingMethod      String?
+  notes              String?
+  recordedById       String?
+  createdAt          DateTime @default(now())
+
+  farm            Farm             @relation(fields: [farmId], references: [id], onDelete: Cascade)
+  herd            Herd?            @relation(fields: [herdId], references: [id], onDelete: SetNull)
+  managementGroup ManagementGroup? @relation(fields: [managementGroupId], references: [id], onDelete: SetNull)
+  recordedBy      User?            @relation("GroupFeedingLogRecorder", fields: [recordedById], references: [id], onDelete: SetNull)
+
+  @@index([farmId, recordedAt])
+  @@index([herdId, recordedAt])
+  @@index([managementGroupId, recordedAt])
+  @@schema("bovine_ops")
+}
+
+model FarmEnvironmentLog {
+  id                 String   @id @default(uuid())
+  farmId             String
+  recordedAt         DateTime
+  airTemperatureC    Decimal? @db.Decimal(5, 2)
+  relativeHumidityPct Decimal? @db.Decimal(5, 2)
+  temperatureHumidityIndex Decimal? @db.Decimal(6, 2)
+  rainfallMm         Decimal? @db.Decimal(10, 2)
+  windSpeedKph       Decimal? @db.Decimal(8, 2)
+  barnTemperatureC   Decimal? @db.Decimal(5, 2)
+  ventilationScore   Int?
+  beddingScore       Int?
+  mudScore           Int?
+  pastureConditionScore Int?
+  shadeAvailabilityScore Int?
+  waterAvailabilityScore Int?
+  heatStressRisk     ObservationSeverity?
+  notes              String?
+  recordedById       String?
+  source             ObservationSource @default(MANUAL)
+  createdAt          DateTime @default(now())
+
+  farm       Farm @relation(fields: [farmId], references: [id], onDelete: Cascade)
+  recordedBy User? @relation("FarmEnvironmentLogRecorder", fields: [recordedById], references: [id], onDelete: SetNull)
+
+  @@index([farmId, recordedAt])
+  @@index([heatStressRisk, recordedAt])
+  @@schema("bovine_ops")
+}
+
+model FarmOperationalEvent {
+  id           String                   @id @default(uuid())
+  farmId       String
+  type         FarmOperationalEventType
+  occurredAt   DateTime
+  severity     ObservationSeverity      @default(INFO)
+  title        String
+  description  String?
+  resolvedAt   DateTime?
+  recordedById String?
+  metadata     Json?
+  createdAt    DateTime                 @default(now())
+
+  farm       Farm @relation(fields: [farmId], references: [id], onDelete: Cascade)
+  recordedBy User? @relation("FarmOperationalEventRecorder", fields: [recordedById], references: [id], onDelete: SetNull)
+
+  @@index([farmId, occurredAt])
+  @@index([type, occurredAt])
+  @@index([resolvedAt])
+  @@schema("bovine_ops")
+}
+
+model DietaryRegime {
+  id                String   @id @default(uuid())
+  farmId            String?
+  code              String?
+  name              String
+  description       String?
+  dietType          String?
+  feedingSchedule   String?
+  foodPreference    String?
+  waterRegime       String?
+  rationComposition Json?
+  supplements       Json?
+  effectiveFrom     DateTime?
+  effectiveTo       DateTime?
+  active            Boolean  @default(true)
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  farm         Farm? @relation(fields: [farmId], references: [id], onDelete: SetNull)
+  observations PhenotypeObservation[]
+
+  @@unique([farmId, code])
+  @@index([farmId, active])
+  @@schema("bovine_ops")
+}
