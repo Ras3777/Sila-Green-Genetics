@@ -2,8 +2,7 @@
 
 import React from 'react';
 import { GitBranch, ShieldCheck } from 'lucide-react';
-import { Animal, Parentage } from '@/lib/bovine-types';
-import { AnimalGeneticMetric } from '@/lib/bovine-genetics-types';
+import { Animal, Parentage, AnimalGeneticMetric } from '@/lib/bovine-types';
 
 interface PedigreeHeaderCardProps {
   selectedAnimal?: Animal;

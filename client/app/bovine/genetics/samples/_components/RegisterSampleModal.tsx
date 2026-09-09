@@ -2,8 +2,7 @@
 
 import React from 'react';
 import { TestTube2, X } from 'lucide-react';
-import { Animal, BiologicalSampleType } from '@/lib/bovine-types';
-import { Laboratory } from '@/lib/bovine-genetics-types';
+import { Animal, BiologicalSampleType, Laboratory } from '@/lib/bovine-types';
 
 interface RegisterSampleModalProps {
   isOpen: boolean;
