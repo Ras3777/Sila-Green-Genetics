@@ -57,7 +57,8 @@ export async function ensureSeededAccount() {
 export function createSession(email: string) {
   const nonce = randomBytes(32).toString('base64url');
   const expiresAt = Math.floor(Date.now() / 1000) + SESSION_TTL_SECONDS;
-  const payload = `${email}.${expiresAt}.${nonce}`;
+  const encodedEmail = Buffer.from(email, 'utf8').toString('base64url');
+  const payload = `${encodedEmail}.${expiresAt}.${nonce}`;
   const signature = createHmac('sha256', getAuthSecret()).update(payload).digest('base64url');
   return { token: `${payload}.${signature}`, nonce, expiresAt };
 }
@@ -66,8 +67,9 @@ export function readSession(token: string | undefined) {
   if (!token) return null;
   const parts = token.split('.');
   if (parts.length !== 4) return null;
-  const [email, expiresRaw, nonce, signature] = parts;
-  const payload = `${email}.${expiresRaw}.${nonce}`;
+  const [encodedEmail, expiresRaw, nonce, signature] = parts;
+  const email = Buffer.from(encodedEmail, 'base64url').toString('utf8');
+  const payload = `${encodedEmail}.${expiresRaw}.${nonce}`;
   const expected = createHmac('sha256', getAuthSecret()).update(payload).digest('base64url');
   if (signature.length !== expected.length || !timingSafeEqual(Buffer.from(signature), Buffer.from(expected))) return null;
   if (Number(expiresRaw) < Math.floor(Date.now() / 1000) || email !== DEMO_EMAIL) return null;
