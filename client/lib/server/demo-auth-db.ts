@@ -2,6 +2,7 @@ import { neon } from '@neondatabase/serverless';
 import { createHash, createHmac, pbkdf2Sync, randomBytes, timingSafeEqual } from 'node:crypto';
 
 const DEMO_EMAIL = (process.env.DEMO_LOGIN_EMAIL || 'j.miller@apexbovine.com').trim().toLowerCase();
+const ADMIN_EMAIL = (process.env.ADMIN_LOGIN_EMAIL || 'admin@sgip.com').trim().toLowerCase();
 const SESSION_TTL_SECONDS = 60 * 60 * 8;
 
 function getSql() {
@@ -27,9 +28,17 @@ export function verifyPassword(password: string, stored: string) {
   return timingSafeEqual(Buffer.from(actual), Buffer.from(expected));
 }
 
-export async function ensureSeededAccount() {
-  const seedPassword = process.env.DEMO_LOGIN_PASSWORD;
-  if (!seedPassword) throw new Error('DEMO_LOGIN_PASSWORD is not configured');
+export function getAccountConfig(email: string) {
+  const normalizedEmail = email.trim().toLowerCase();
+  if (normalizedEmail === DEMO_EMAIL) return { email: DEMO_EMAIL, password: process.env.DEMO_LOGIN_PASSWORD };
+  if (normalizedEmail === ADMIN_EMAIL) return { email: ADMIN_EMAIL, password: process.env.ADMIN_LOGIN_PASSWORD };
+  return null;
+}
+
+export async function ensureSeededAccount(email = DEMO_EMAIL) {
+  const account = getAccountConfig(email);
+  const seedPassword = account?.password;
+  if (!seedPassword) throw new Error(`Password is not configured for ${account?.email || email}`);
 
   const sql = getSql();
   await sql`CREATE TABLE IF NOT EXISTS demo_access_users (
@@ -37,21 +46,27 @@ export async function ensureSeededAccount() {
     password_hash TEXT NOT NULL,
     active_session_hash TEXT,
     active_session_expires_at TIMESTAMPTZ,
+    device_id_hash TEXT,
+    last_user_agent TEXT,
+    last_ip TEXT,
     created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
     last_login_at TIMESTAMPTZ
   )`;
   await sql`ALTER TABLE demo_access_users ADD COLUMN IF NOT EXISTS active_session_expires_at TIMESTAMPTZ`;
+  await sql`ALTER TABLE demo_access_users ADD COLUMN IF NOT EXISTS device_id_hash TEXT`;
+  await sql`ALTER TABLE demo_access_users ADD COLUMN IF NOT EXISTS last_user_agent TEXT`;
+  await sql`ALTER TABLE demo_access_users ADD COLUMN IF NOT EXISTS last_ip TEXT`;
 
   const salt = process.env.DEMO_PASSWORD_SALT || 'bovine-demo-account-salt-v1';
   const passwordHash = `${salt}$${hashPassword(seedPassword, salt)}`;
   await sql`
     INSERT INTO demo_access_users (email, password_hash)
-    VALUES (${DEMO_EMAIL}, ${passwordHash})
+    VALUES (${account.email}, ${passwordHash})
     ON CONFLICT (email) DO UPDATE SET password_hash = EXCLUDED.password_hash
   `;
 
-  const rows = await sql`SELECT email, password_hash, active_session_hash, active_session_expires_at FROM demo_access_users WHERE email = ${DEMO_EMAIL} LIMIT 1`;
-  return { sql, user: rows[0] as { email: string; password_hash: string; active_session_hash: string | null; active_session_expires_at: string | null } | undefined };
+  const rows = await sql`SELECT email, password_hash, active_session_hash, active_session_expires_at, device_id_hash FROM demo_access_users WHERE email = ${account.email} LIMIT 1`;
+  return { sql, user: rows[0] as { email: string; password_hash: string; active_session_hash: string | null; active_session_expires_at: string | null; device_id_hash: string | null } | undefined };
 }
 
 export function createSession(email: string) {
@@ -72,7 +87,7 @@ export function readSession(token: string | undefined) {
   const payload = `${encodedEmail}.${expiresRaw}.${nonce}`;
   const expected = createHmac('sha256', getAuthSecret()).update(payload).digest('base64url');
   if (signature.length !== expected.length || !timingSafeEqual(Buffer.from(signature), Buffer.from(expected))) return null;
-  if (Number(expiresRaw) < Math.floor(Date.now() / 1000) || email !== DEMO_EMAIL) return null;
+  if (Number(expiresRaw) < Math.floor(Date.now() / 1000) || !getAccountConfig(email)) return null;
   return { email, nonce };
 }
 
@@ -80,4 +95,4 @@ export function hashSessionNonce(nonce: string) {
   return createHash('sha256').update(nonce).digest('base64url');
 }
 
-export { DEMO_EMAIL, SESSION_TTL_SECONDS };
+export { DEMO_EMAIL, ADMIN_EMAIL, SESSION_TTL_SECONDS };
