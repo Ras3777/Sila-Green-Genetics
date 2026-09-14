@@ -1,4 +1,5 @@
 export const DEMO_EMAIL = 'j.miller@apexbovine.com';
+export const ADMIN_EMAIL = 'admin@sgip.com';
 export const DEMO_AUTH_STORAGE_KEY = 'bovine_demo_auth';
 
 type DemoSession = {
@@ -7,7 +8,8 @@ type DemoSession = {
 };
 
 export function isDemoEmail(value: string) {
-  return value.trim().toLowerCase() === DEMO_EMAIL;
+  const normalized = value.trim().toLowerCase();
+  return normalized === DEMO_EMAIL || normalized === ADMIN_EMAIL;
 }
 
 export function saveDemoSession(email: string) {
